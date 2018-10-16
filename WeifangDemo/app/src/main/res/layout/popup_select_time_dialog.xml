@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/aa_black"
+    android:gravity="bottom">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/white"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/data_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginLeft="20dp"
+                android:gravity="center_vertical|right"
+                android:background="@drawable/line_input_bg"
+                android:textColor="#333333"
+                android:textSize="14sp" />
+            <TextView
+                android:id="@+id/time_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginLeft="20dp"
+                android:gravity="center_vertical|right"
+                android:textColor="@color/fontColor"
+                android:textSize="14sp" />
+        </LinearLayout>
+        <TextView
+            android:id="@+id/dialog_select_time_ok"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:paddingRight="20dp"
+            android:gravity="center_vertical|right"
+            android:text="@string/dlg_ok"
+            android:textColor="@color/color_0061B0"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:gravity="center">
+        <LinearLayout
+            android:id="@+id/time_layout"
+            android:layout_width="match_parent"
+            android:layout_height="216sp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="10dp"
+            android:gravity="center"
+            android:visibility="gone"
+            android:orientation="horizontal">
+
+            <com.bsit.wheelview.WheelView
+                android:id="@+id/dialog_select_time_wheel1"
+                android:layout_width="60dp"
+                android:layout_height="120dp"
+                android:background="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_margin="10dp"
+                android:textColor="#333333"
+                android:text="@string/str_maohao"
+                android:textSize="14sp"
+                android:layout_height="wrap_content"/>
+
+            <com.bsit.wheelview.WheelView
+                android:id="@+id/dialog_select_time_wheel2"
+                android:layout_width="60dp"
+                android:layout_height="120dp"
+                android:layout_marginLeft="20dp"
+                android:background="@color/white" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_margin="10dp"
+                android:textColor="#333333"
+                android:text="@string/str_maohao"
+                android:textSize="14sp"
+                android:layout_height="wrap_content"/>
+
+            <com.bsit.wheelview.WheelView
+                android:id="@+id/dialog_select_time_wheel3"
+                android:layout_width="60dp"
+                android:layout_height="120dp"
+                android:layout_marginLeft="20dp"
+                android:background="@color/white" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/calendar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:paddingTop="10dp"
+            android:orientation="vertical">
+            <com.bsit.pboard.calendarview.WeekView
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                />
+            <com.bsit.pboard.calendarview.MonthView
+                android:id="@+id/calendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+        </LinearLayout>
+    </RelativeLayout>
+</LinearLayout>

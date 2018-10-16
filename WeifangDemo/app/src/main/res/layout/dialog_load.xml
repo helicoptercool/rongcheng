@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/transparent">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@color/transparent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingLeft="15px"
+        android:paddingRight="15px">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="40px"
+            android:layout_height="40px"
+            android:alpha="5"
+            android:src="@drawable/animation"
+            android:clickable="false"/>
+
+        <TextView
+            android:id="@+id/tips_loading_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:layout_marginTop="5px"
+            android:textSize="11px"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tips_loading_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:layout_marginTop="5px"
+            android:textSize="14px"
+            android:textStyle="bold"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="400px"
+    android:layout_height="240px"
+    android:background="@drawable/bg">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="30px"
+        android:layout_alignParentTop="true">
+
+        <ImageView
+            android:layout_width="76px"
+            android:layout_height="23px"
+            android:layout_centerVertical="true"
+            android:src="@drawable/logo"/>
+
+        <TextView
+            android:id="@+id/right_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="21px"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:layout_marginRight="20px"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:text="@string/wimax_settings"/>
+
+        <ImageView
+            android:id="@+id/signal_intensity_iv"
+            android:layout_width="27px"
+            android:layout_height="21px"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="7px"
+            android:layout_toLeftOf="@id/right_tv"
+            android:background="@drawable/signal_intensity0"/>
+
+        <TextView
+            android:id="@+id/date_time_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18px"
+            android:textColor="@color/white"
+            android:layout_marginRight="7px"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/signal_intensity_iv"
+            android:text="@string/str_init_time"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/bottom_rl"
+        android:layout_width="match_parent"
+        android:layout_height="40px"
+        android:layout_alignParentBottom="true"
+        android:visibility="visible">
+        <ImageView
+            android:layout_width="26px"
+            android:layout_height="20px"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5px"
+            android:src="@drawable/icon_ka"/>
+        <TextView
+            android:id="@+id/card_no_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16px"
+            android:text="@string/str_init_time"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="36px"
+            android:textColor="@color/white"/>
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="30px"
+        android:layout_marginBottom="40px"
+        android:background="@drawable/bg2">
+
+
+        <LinearLayout
+            android:id="@+id/warnming_ll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="24px"
+                android:layout_height="wrap_content"
+                android:src="@drawable/warning"/>
+
+            <TextView
+                android:id="@+id/warnming_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="20px"
+                android:textColor="@color/white"
+                android:layout_marginLeft="5px"
+                android:text="@string/dlg_ok"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <include
+            android:id="@+id/result_ll"
+            layout="@layout/dialog_load"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:gravity="center_vertical"
+            android:visibility="gone"/>
+
+        <LinearLayout
+            android:id="@+id/welcome_ll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:visibility="visible">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/str_welcome"
+                    android:textColor="@color/welcome_color"
+                    android:textSize="24px"
+                    android:textStyle="bold"/>
+
+
+                <TextView
+                    android:id="@+id/device_name_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/str_device_name"
+                    android:textColor="@color/white"
+                    android:textSize="20px"
+                    android:layout_marginTop="10px"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginLeft="10px"
+                android:orientation="vertical">
+                <ImageView
+                    android:id="@+id/qr_iv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/sn_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/str_sn_create_tip"
+                    android:textColor="@color/white"
+                    android:textSize="12px"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/str_sn_create_tip"
+                    android:textColor="@color/white"
+                    android:layout_marginTop="5px"
+                    android:textSize="15px"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+        </LinearLayout>
+
+    </RelativeLayout>
+</RelativeLayout>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2007 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+    <color name="black">#000</color>
+    <color name="red">#F00</color>
+    <color name="aa_black">#53000000</color>
+    <color name="sum_text2">#C6C6C6</color>
+    <color name="color_3e84cc">#3e84cc</color>
+    <color name="transparent_white">#00FFFFFF</color>
+    <color name="gray_df">#DFDFDF</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="fontColor">#6C6C6C</color>
+    <color name="grayfontColor">#E0E0E0</color>
+    <color name="color_bg">#FFFFFF</color>
+    <color name="line_color">#E0E0E0</color>
+    <color name="swich_color">#209CDD</color>
+    <color name="color_FE4F20">#FE4F20</color>
+    <color name="color_FFBCAA">#FFBCAA</color>
+    <color name="ampm_off">#ff404040</color>
+    <color name="ampm_on">#ffffffff</color>
+    <color name="white">#ffffffff</color>
+    <color name="font_normal">#333333</color>
+    <color name="font_gray">#999999</color>
+    <!-- <color name="red">#ffee0000</color> -->
+    <color name="ltgrey">#ffe0e0e0</color>
+    <color name="darkBlue">#1f4ba5</color>
+    <color name="transparent">#00000000</color>
+    <color name="color_0061B0">#0061B0</color>
+    <color name="memory_used">#F00</color>
+    <color name="memory_avail">#333333</color>
+    <color name="memory_apps_usage">#77831A</color>
+    <color name="memory_downloads">#476093</color>
+    <color name="memory_dcim">#793A7F</color>
+    <color name="memory_music">#8E562A</color>
+    <color name="memory_cache">#479392</color>
+    <color name="memory_misc">#7C3030</color>
+    <color name="memory_user_light">#479392</color>
+    <color name="memory_user_dark">#316665</color>
+
+    <color name="crypt_keeper_clock_background">#ff9a9a9a</color>
+    <color name="crypt_keeper_clock_foreground">#ff666666</color>
+    <color name="crypt_keeper_clock_am_pm">#ff9a9a9a</color>
+
+    <color name="divider_color">#20ffffff</color>
+    <color name="title_color">@android:color/holo_blue_light</color>
+    <color name="setup_divider_color_dark">#33ffffff</color>
+    <color name="setup_divider_color_light">#33000000</color>
+
+    <color name="circle_avatar_frame_color">#ffffffff</color>
+    <color name="circle_avatar_frame_shadow_color">#80000000</color>
+    <color name="circle_avatar_frame_pressed_color">#ffffffff</color>
+
+    <!-- colors for sims -->
+    <color name="sim_bgcolor0">#35b800</color>
+    <color name="sim_bgcolor1">#ff7214</color>
+    <color name="sim_bgcolor2">#0098df</color>
+    <color name="sim_bgcolor3">#735cff</color>
+    <color name="welcome_color">#777aff</color>
+
+</resources>
