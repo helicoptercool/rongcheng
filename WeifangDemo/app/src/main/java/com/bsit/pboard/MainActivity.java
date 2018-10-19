@@ -2,13 +2,8 @@ package com.bsit.pboard;
 
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.hardware.usb.UsbManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,18 +21,15 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.bsit.pboard.R;
 import com.bsit.pboard.business.CardBusiness;
 import com.bsit.pboard.business.HttpBusiness;
 import com.bsit.pboard.model.CardInfo;
 import com.bsit.pboard.model.MessageApplyWriteReq;
 import com.bsit.pboard.model.MessageApplyWriteRes;
 import com.bsit.pboard.model.MessageConfirmReq;
-import com.bsit.pboard.model.MessageQueryReq;
 import com.bsit.pboard.model.MessageQueryRes;
 import com.bsit.pboard.model.Rda;
 import com.bsit.pboard.utils.ByteUtil;
-import com.bsit.pboard.utils.QRCodeUtil;
 import com.bsit.pboard.utils.ShellUtils;
 import com.bsit.pboard.utils.ToastUtils;
 import com.guozheng.urlhttputils.urlhttp.CallBackUtil;
@@ -60,6 +52,7 @@ public class MainActivity extends Activity {
      * UI控件申明
      **/
     private TextView dateTimeTv;
+    private TextView weekDayTv;
     //    private TextView cardNoTv;
     private TextView terminalNoTv;
     private TextView warnmingTv;
@@ -70,7 +63,7 @@ public class MainActivity extends Activity {
     private ImageView signalIntensityIv;
 //    private ImageView qrIv;
     private ImageView image;
-    private RelativeLayout bottomRl;
+//    private RelativeLayout bottomRl;
     private RelativeLayout resultRl;
     private LinearLayout warnmingLl;
     private LinearLayout welcomeLl;
@@ -219,7 +212,7 @@ public class MainActivity extends Activity {
             super.handleMessage(msg);
             switch (msg.what) {
                 case UPDATE_TIME_MSG_WHAT:
-                    setTimeText();
+                    setWeekText();
                     break;
             }
         }
@@ -469,12 +462,13 @@ public class MainActivity extends Activity {
 //        initSetting();
 //        initLister();
         initTimeStamp();
-        setTimeText();
+        setWeekText();
         handler.sendEmptyMessage(HEART_BEAT_MSG_WHAT);
     }
 
     private void initView() {
         dateTimeTv = (TextView) findViewById(R.id.date_time_tv);
+        weekDayTv = findViewById(R.id.week_day_tv);
 //        cardNoTv = (TextView) findViewById(R.id.card_no_tv);
         terminalNoTv = (TextView) findViewById(R.id.terminal_no_tv);
         warnmingTv = (TextView) findViewById(R.id.warnming_tv);
@@ -483,7 +477,7 @@ public class MainActivity extends Activity {
 //        snTv = (TextView) findViewById(R.id.sn_tv);
         signalIntensityIv = (ImageView) findViewById(R.id.signal_intensity_iv);
         image = (ImageView) findViewById(R.id.image);
-        bottomRl = (RelativeLayout) findViewById(R.id.bottom_rl);
+//        bottomRl = (RelativeLayout) findViewById(R.id.bottom_rl);
         resultRl = (RelativeLayout) findViewById(R.id.result_ll);
         warnmingLl = (LinearLayout) findViewById(R.id.warnming_ll);
         welcomeLl = (LinearLayout) findViewById(R.id.welcome_ll);
@@ -495,6 +489,8 @@ public class MainActivity extends Activity {
     private void initTimeStamp() {
         dff = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dff.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        dateTimeTv.setText(dff.format(new Date()));
+        timeHandler.sendEmptyMessageDelayed(UPDATE_TIME_MSG_WHAT, 1000);
     }
 
     private void initLister() {
@@ -503,9 +499,10 @@ public class MainActivity extends Activity {
         Tel.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
     }
 
-    private void setTimeText() {
-        dateTimeTv.setText(dff.format(new Date()));
-        timeHandler.sendEmptyMessageDelayed(UPDATE_TIME_MSG_WHAT, 1000);
+    private void setWeekText() {
+        Date date=new Date();
+        SimpleDateFormat dateFm = new SimpleDateFormat("EEEE");
+        weekDayTv.setText(dateFm.format(date));
     }
 
     @Override
@@ -572,7 +569,7 @@ public class MainActivity extends Activity {
                 handler.sendEmptyMessage(FIND_CARD_MSG_WHAT);
                 break;
             case 1: //无效卡
-                bottomRl.setVisibility(View.GONE);
+//                bottomRl.setVisibility(View.GONE);
                 resultRl.setVisibility(View.GONE);
                 warnmingLl.setVisibility(View.VISIBLE);
                 warnmingTv.setText("无效卡");
@@ -580,7 +577,7 @@ public class MainActivity extends Activity {
                 handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 2000);
                 break;
             case 2: //无补登订单
-                bottomRl.setVisibility(View.VISIBLE);
+//                bottomRl.setVisibility(View.VISIBLE);
 //                cardNoTv.setText(cardInfo.getCardNo());
                 resultRl.setVisibility(View.GONE);
                 warnmingLl.setVisibility(View.VISIBLE);
@@ -589,7 +586,7 @@ public class MainActivity extends Activity {
                 handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 2000);
                 break;
             case 3: //补登充值中
-                bottomRl.setVisibility(View.VISIBLE);
+//                bottomRl.setVisibility(View.VISIBLE);
 //                cardNoTv.setText(cardInfo.getCardNo());
                 resultRl.setVisibility(View.VISIBLE);
                 warnmingLl.setVisibility(View.GONE);
@@ -598,7 +595,7 @@ public class MainActivity extends Activity {
                 break;
             case 4: //补登结果
                 image.clearAnimation();
-                bottomRl.setVisibility(View.VISIBLE);
+//                bottomRl.setVisibility(View.VISIBLE);
 //                cardNoTv.setText(cardInfo.getCardNo());
                 resultRl.setVisibility(View.VISIBLE);
                 warnmingLl.setVisibility(View.GONE);
@@ -625,7 +622,7 @@ public class MainActivity extends Activity {
                     warnmingLl.setVisibility(View.VISIBLE);
                     welcomeLl.setVisibility(View.GONE);
                 } else {
-                    bottomRl.setVisibility(View.VISIBLE);
+//                    bottomRl.setVisibility(View.VISIBLE);
 //                    cardNoTv.setText(cardInfo.getCardNo());
                     resultRl.setVisibility(View.GONE);
                     warnmingLl.setVisibility(View.VISIBLE);
@@ -648,7 +645,7 @@ public class MainActivity extends Activity {
                 }
                 break;
             case NOT_USE_MSG_WHAT:
-                bottomRl.setVisibility(View.VISIBLE);
+//                bottomRl.setVisibility(View.VISIBLE);
 //                cardNoTv.setText(cardInfo.getCardNo());
                 resultRl.setVisibility(View.GONE);
                 warnmingLl.setVisibility(View.VISIBLE);
@@ -657,7 +654,7 @@ public class MainActivity extends Activity {
                 handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 2000);
                 break;
             case INIT_NETWORK:
-                bottomRl.setVisibility(View.GONE);
+//                bottomRl.setVisibility(View.GONE);
 //                cardNoTv.setText(cardInfo.getCardNo());
                 welcomeLl.setVisibility(View.GONE);
                 resultRl.setVisibility(View.GONE);

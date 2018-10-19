@@ -10,11 +10,26 @@
         android:layout_height="30px"
         android:layout_alignParentTop="true">
 
-        <ImageView
-            android:layout_width="76px"
-            android:layout_height="23px"
+        <TextView
+            android:id="@+id/date_time_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18px"
+            android:textColor="@color/white"
+            android:layout_marginRight="7px"
             android:layout_centerVertical="true"
-            android:src="@drawable/logo"/>
+            android:text="@string/str_init_time"/>
+
+        <TextView
+            android:id="@+id/week_day_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18px"
+            android:layout_marginLeft="5dp"
+            android:textColor="@color/white"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/date_time_tv"
+            android:text="sunday"/>
 
         <TextView
             android:id="@+id/right_tv"
@@ -36,17 +51,6 @@
             android:layout_marginRight="7px"
             android:layout_toLeftOf="@id/right_tv"
             android:background="@drawable/signal_intensity0"/>
-
-        <TextView
-            android:id="@+id/date_time_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="18px"
-            android:textColor="@color/white"
-            android:layout_marginRight="7px"
-            android:layout_centerVertical="true"
-            android:layout_toLeftOf="@id/signal_intensity_iv"
-            android:text="@string/str_init_time"/>
 
     </RelativeLayout>
 
