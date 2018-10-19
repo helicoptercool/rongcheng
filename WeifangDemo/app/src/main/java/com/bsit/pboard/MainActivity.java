@@ -127,6 +127,7 @@ public class MainActivity extends Activity {
      * Handler句柄模式
      **/
     private final static int FIND_CARD_MSG_WHAT = -2;
+    private final static int FIND_OTHER_CARD_MSG_WHAT = -3;
     private final static int UPDATE_TIME_MSG_WHAT = 0;
     private final static int HEART_BEAT_MSG_WHAT = 1;
     private final static int SHOW_WELCOME_MSG_WHAT = 2;
@@ -145,6 +146,10 @@ public class MainActivity extends Activity {
                     removeMessages(FIND_CARD_MSG_WHAT);
                     findCard();
                     break;
+//                case FIND_OTHER_CARD_MSG_WHAT:
+//                    removeMessages(FIND_CARD_MSG_WHAT);
+//                    findOtherCard();
+//                    break;
                 case HEART_BEAT_MSG_WHAT:
                     if (!TextUtils.isEmpty(cityCode) && !TextUtils.isEmpty(deviceId)) {
                         HttpBusiness.heartBeat(deviceId, cityCode, getVerName(MainActivity.this), "", handler);
@@ -244,7 +249,6 @@ public class MainActivity extends Activity {
                     netHandler.sendEmptyMessageDelayed(1, 2000);
                 } else {
                     netHandler.removeMessages(1);
-                    handler.sendEmptyMessageDelayed(FIND_CARD_MSG_WHAT, 1000);
                 }
             }
         }.start();
@@ -260,6 +264,49 @@ public class MainActivity extends Activity {
                     csn = cardBusiness.findCard();
                     if (!TextUtils.isEmpty(csn)) {
                         cardInfo = cardBusiness.getCardInfo();
+//                        cardInfo = cardBusiness.getCardInfoNew();
+                        Log.i(TAG, "card iii---iiii-----info = " + cardInfo.toString());
+                        cardBusiness.getTopInitInfo(cardInfo, "8888", deviceId);
+                        if (cardInfo.getIsUse()) {
+                            handler.sendEmptyMessage(SHOW_CARD_MSG_WHAT);
+                        } else {
+                            handler.sendEmptyMessage(NOT_USE_MSG_WHAT);
+                        }
+//                        cityCode = "314" + Integer.parseInt(cardInfo.getCardNo().substring(9, 11)) % 10;
+//                        httpBusiness.signIn(handler);
+//                        httpBusiness.queryOrder(new MessageQueryReq(deviceId, cardInfo.getCardNo(), cityCode, csn,
+//                                cardInfo.getCardSType(), cardInfo.getCardMType(), cardInfo.getBalance()), handler);
+                    }
+                } catch (final CardBusiness.FindCardException e) {
+                    cardInfo = null;
+                    handler.sendEmptyMessageDelayed(FIND_CARD_MSG_WHAT, 2000);
+                } catch (final CardBusiness.ReadCardException e) {
+                    cardInfo = null;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ToastUtils.showToast(e.getMessage(), MainActivity.this);
+                        }
+                    });
+//                    handler.sendEmptyMessageDelayed(FIND_OTHER_CARD_MSG_WHAT, 1000);
+                    handler.sendEmptyMessageDelayed(FIND_CARD_MSG_WHAT, 2000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
+    private void findOtherCard() {
+        Log.i(TAG, "find card 0000-00000-0-000---ssstart");
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    csn = cardBusiness.findCard();
+                    if (!TextUtils.isEmpty(csn)) {
+                        cardInfo = cardBusiness.readOtherCard();
                         Log.i(TAG, "card iii---iiii-----info = " + cardInfo.toString());
                         if (cardInfo.getIsUse()) {
                             handler.sendEmptyMessage(SHOW_CARD_MSG_WHAT);
@@ -282,7 +329,7 @@ public class MainActivity extends Activity {
                             ToastUtils.showToast(e.getMessage(), MainActivity.this);
                         }
                     });
-                    handler.sendEmptyMessageDelayed(FIND_CARD_MSG_WHAT, 1000);
+                    handler.sendEmptyMessageDelayed(FIND_OTHER_CARD_MSG_WHAT, 1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -588,7 +635,7 @@ public class MainActivity extends Activity {
                     warnmingTv.setText(errorMsg);
                     welcomeLl.setVisibility(View.GONE);
                 }
-//                handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 3000);
+                handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 3000);
                 break;
             case SHOW_CARD_MSG_WHAT: //显示卡号，余额
                 welcomeLl.setVisibility(View.GONE);

@@ -329,17 +329,17 @@ public class HttpBusiness {
             @Override
             public void onResponse(String response) {
                 Log.i("*******", "sign ========== " + response);
-                Message msg = handler.obtainMessage();
-                BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>() {
-                }.getType());
-                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
-                    msg.what = QUERY_ORDER_SUCEESS_CODE;
-                    msg.obj = backInfoObject.getObj();
-                } else {
-                    msg.what = QUERY_ORDER_EROOR_CODE;
-                    msg.obj = backInfoObject.getMessage();
-                }
-                handler.sendMessage(msg);
+//                Message msg = handler.obtainMessage();
+//                BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>() {
+//                }.getType());
+//                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
+//                    msg.what = QUERY_ORDER_SUCEESS_CODE;
+//                    msg.obj = backInfoObject.getObj();
+//                } else {
+//                    msg.what = QUERY_ORDER_EROOR_CODE;
+//                    msg.obj = backInfoObject.getMessage();
+//                }
+//                handler.sendMessage(msg);
             }
         });
     }
