@@ -189,5 +189,8 @@
     <string name="str_init_time">2018-04-16 12:12:12</string>
     <string name="str_sn_create_tip">扫码创建设备SN编号</string>
     <string name="str_welcome">欢迎使用</string>
-    <string name="str_device_name">嘉兴补登设备</string>
+    <string name="str_device_name">榕城补登设备</string>
+    <string name="str_terminal_id">终端ID:</string>
+    <string name="str_init_network">正在初始化网络...</string>
+    <string name="str_no_permitted_card">不允许补登充值的卡</string>
 </resources>

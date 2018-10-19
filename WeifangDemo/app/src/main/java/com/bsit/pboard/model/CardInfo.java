@@ -22,9 +22,19 @@ public class CardInfo implements Serializable {
     private String qcMac;
     private String messageDateTime;
     private String cardSType;  //主卡类型
+
     private String cardMType;  //子卡类型
     private String tac;
+    private boolean isUse; //是否启用
 
+
+    public boolean getIsUse() {
+        return isUse;
+    }
+
+    public void setIsUse(boolean isUse) {
+        this.isUse = isUse;
+    }
     public String getTac() {
         return tac;
     }
@@ -159,5 +169,29 @@ public class CardInfo implements Serializable {
 
     public void setCardMType(String cardMType) {
         this.cardMType = cardMType;
+    }
+
+    @Override
+    public String toString() {
+        return "CardInfo{" +
+                "cardIssuerLogo='" + cardIssuerLogo + '\'' +
+                ", appTypeIdentification='" + appTypeIdentification + '\'' +
+                ", appVersionOrganization='" + appVersionOrganization + '\'' +
+                ", cardNo='" + cardNo + '\'' +
+                ", startTime='" + startTime + '\'' +
+                ", endTime='" + endTime + '\'' +
+                ", fciData='" + fciData + '\'' +
+                ", balance='" + balance + '\'' +
+                ", cardSeq='" + cardSeq + '\'' +
+                ", keyVer='" + keyVer + '\'' +
+                ", alglnd='" + alglnd + '\'' +
+                ", cardRand='" + cardRand + '\'' +
+                ", qcMac='" + qcMac + '\'' +
+                ", messageDateTime='" + messageDateTime + '\'' +
+                ", cardSType='" + cardSType + '\'' +
+                ", cardMType='" + cardMType + '\'' +
+                ", tac='" + tac + '\'' +
+                ", isUse='" + isUse + '\'' +
+                '}';
     }
 }

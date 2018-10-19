@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     coreApp="true"
     package="com.bsit.pboard"
     android:versionCode="1"
@@ -69,7 +70,8 @@
         android:persistent="true"
         android:supportsRtl="true"
         android:name=".CrashApplication"
-        android:theme="@android:style/Theme.NoTitleBar">
+        android:theme="@android:style/Theme.NoTitleBar"
+        tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".MainActivity"
             android:screenOrientation="landscape">
             <intent-filter>

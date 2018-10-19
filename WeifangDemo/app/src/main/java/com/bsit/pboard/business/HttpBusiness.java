@@ -17,6 +17,7 @@ import com.bsit.pboard.model.MessageConfirmRes;
 import com.bsit.pboard.model.MessageQueryReq;
 import com.bsit.pboard.model.MessageQueryRes;
 import com.bsit.pboard.model.Rda;
+import com.bsit.pboard.utils.MacUtils;
 import com.bsit.pboard.utils.ToastUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -26,8 +27,10 @@ import com.guozheng.urlhttputils.urlhttp.UrlHttpUtil;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 public class HttpBusiness {
     private static HttpBusiness httpBusiness;
@@ -57,11 +60,12 @@ public class HttpBusiness {
 
     /**
      * 补登查询
+     *
      * @param messageQueryReq
      * @param handler
      */
-    public static void queryOrder(MessageQueryReq messageQueryReq, final Handler handler){
-        if(!isNetworkAvailable(context)){
+    public static void queryOrder(MessageQueryReq messageQueryReq, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
             Message msg = handler.obtainMessage();
             msg.what = ERROR_CODE;
             msg.obj = "设备无网络";
@@ -88,11 +92,12 @@ public class HttpBusiness {
             @Override
             public void onResponse(String response) {
                 Message msg = handler.obtainMessage();
-                BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>(){}.getType());
-                if(backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")){
+                BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
                     msg.what = QUERY_ORDER_SUCEESS_CODE;
                     msg.obj = backInfoObject.getObj();
-                }else{
+                } else {
                     msg.what = QUERY_ORDER_EROOR_CODE;
                     msg.obj = backInfoObject.getMessage();
                 }
@@ -104,11 +109,12 @@ public class HttpBusiness {
 
     /**
      * 补登圈存
+     *
      * @param messageApplyWriteReq
      * @param handler
      */
-    public static void rechargeCard(MessageApplyWriteReq messageApplyWriteReq,  final Handler handler){
-        if(!isNetworkAvailable(context)){
+    public static void rechargeCard(MessageApplyWriteReq messageApplyWriteReq, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
             Message msg = handler.obtainMessage();
             msg.what = ERROR_CODE;
             msg.obj = "设备无网络";
@@ -143,11 +149,12 @@ public class HttpBusiness {
             @Override
             public void onResponse(String response) {
                 Message msg = handler.obtainMessage();
-                BackInfoObject<MessageApplyWriteRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageApplyWriteRes>>(){}.getType());
-                if(backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")){
+                BackInfoObject<MessageApplyWriteRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageApplyWriteRes>>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
                     msg.what = START_RECHARGECARD_SUCEESS_CODE;
                     msg.obj = backInfoObject.getObj();
-                }else{
+                } else {
                     msg.what = START_RECHARGECARD_EROOR_CODE;
                     msg.obj = backInfoObject.getStatus();
                 }
@@ -159,11 +166,12 @@ public class HttpBusiness {
 
     /**
      * 补登确认
+     *
      * @param messageConfirmReq
      * @param handler
      */
-    public static void confirmRecharge(MessageConfirmReq messageConfirmReq, final Handler handler){
-        if(!isNetworkAvailable(context)){
+    public static void confirmRecharge(MessageConfirmReq messageConfirmReq, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
             Message msg = handler.obtainMessage();
             msg.what = ERROR_CODE;
             msg.obj = "设备无网络";
@@ -194,11 +202,12 @@ public class HttpBusiness {
             @Override
             public void onResponse(String response) {
                 Message msg = handler.obtainMessage();
-                BackInfoObject backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject>(){}.getType());
-                if(backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")){
+                BackInfoObject backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
                     msg.what = CONFIRM_RECHARGE_SUCEESS_CODE;
                     msg.obj = backInfoObject.getObj();
-                }else{
+                } else {
                     msg.what = CONFIRM_RECHARGE_EROOR_CODE;
                     msg.obj = backInfoObject.getStatus();
                 }
@@ -209,14 +218,15 @@ public class HttpBusiness {
 
     /**
      * 心跳请求
+     *
      * @param equId
      * @param cityCode
      * @param binVer
      * @param hardWorkVer
      * @param handler
      */
-    public static void heartBeat(String equId, final String cityCode, String binVer, String hardWorkVer, final Handler handler){
-        if(!isNetworkAvailable(context)){
+    public static void heartBeat(String equId, final String cityCode, String binVer, String hardWorkVer, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
             Message msg = handler.obtainMessage();
             msg.what = ERROR_CODE;
             msg.obj = "设备无网络";
@@ -238,8 +248,9 @@ public class HttpBusiness {
             public void onResponse(String response) {
                 Log.e("TAG", response);
                 Message msg = handler.obtainMessage();
-                BaseObject<Rda> backInfoObject = gson.fromJson(response, new TypeToken<BaseObject<Rda>>(){}.getType());
-                if(backInfoObject.getCode() != null && backInfoObject.getCode().equals("00000")){
+                BaseObject<Rda> backInfoObject = gson.fromJson(response, new TypeToken<BaseObject<Rda>>() {
+                }.getType());
+                if (backInfoObject.getCode() != null && backInfoObject.getCode().equals("00000")) {
                     msg.what = HEART_BEAT_SUCEESS_CODE;
                     msg.obj = backInfoObject.getContent();
                     handler.sendMessage(msg);
@@ -247,8 +258,6 @@ public class HttpBusiness {
             }
         });
     }
-
-
 
 
     /**
@@ -290,4 +299,57 @@ public class HttpBusiness {
         }
     }
 
+    /**
+     * 签到获取秘钥：每次开机后，网络初始化成功后发起
+     *
+     * @param handler
+     */
+    public static void signIn(final Handler handler) {
+        if (!isNetworkAvailable(context)) {
+            Message msg = handler.obtainMessage();
+            msg.what = ERROR_CODE;
+            msg.obj = "设备无网络";
+            handler.sendMessage(msg);
+            return;
+        }
+        HashMap<String, String> paramsMap = new HashMap<String, String>();
+        paramsMap.put("termId", MacUtils.getMac());
+        paramsMap.put("messageDateTime", getTime());
+
+
+        UrlHttpUtil.post(Constants.URL_SIGN_IN, paramsMap, new CallBackUtil.CallBackString() {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+                Message msg = handler.obtainMessage();
+                msg.what = ERROR_CODE;
+                msg.obj = errorMessage;
+                handler.sendMessage(msg);
+            }
+
+            @Override
+            public void onResponse(String response) {
+                Log.i("*******", "sign ========== " + response);
+                Message msg = handler.obtainMessage();
+                BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
+                    msg.what = QUERY_ORDER_SUCEESS_CODE;
+                    msg.obj = backInfoObject.getObj();
+                } else {
+                    msg.what = QUERY_ORDER_EROOR_CODE;
+                    msg.obj = backInfoObject.getMessage();
+                }
+                handler.sendMessage(msg);
+            }
+        });
+    }
+
+    private static String getTime() {
+        Calendar now = Calendar.getInstance();
+        SimpleDateFormat dff = null;
+        dff = new SimpleDateFormat("yyyyMMddHHmmss");
+        dff.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        String formatted = dff.format(now.getTime());
+        return formatted;
+    }
 }

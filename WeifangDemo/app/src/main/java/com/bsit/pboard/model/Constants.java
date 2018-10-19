@@ -17,4 +17,10 @@ public class Constants {
     //心跳接口
     public static String HEART_BEAT_URL = "http://192.168.1.120:9080/equ_watch/httpHeartBeat/saveHeartBeat";
 
+
+    private static final String URL_RONGCHENG_BASE = "http://191.168.1.116:8080"; //榕城测试地址
+    public static final String URL_SIGN_IN = URL_RONGCHENG_BASE + "/rongchengtong/sign"; //签到获取秘钥
+    public static final String URL_RECHARGE_APPLY = URL_RONGCHENG_BASE + "/rongchengtong/rechargeApply"; //圈存申请
+    public static final String URL_MONTY_TICKET_UPDATE = URL_RONGCHENG_BASE + "/rongchengtong/updateMonthTicket"; //CPU卡补登月票有效期修改（月票才需）
+    public static final String URL_RECHARGE_CONFIRM = URL_RONGCHENG_BASE + "/rongchengtong/rechargeConfirm"; //圈存确认
 }
