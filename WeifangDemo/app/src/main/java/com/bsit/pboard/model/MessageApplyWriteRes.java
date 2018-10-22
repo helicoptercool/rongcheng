@@ -8,32 +8,23 @@ package com.bsit.pboard.model;
  */
 public class MessageApplyWriteRes {
 
-	private String messageDateTime; // 时间戳                                    	 14位
-	private String mac2; 			// 圈存mac2                8位
-	private String respondeCode; 	// 响应码（09000成功，其他失败）  5位
+//	private String messageDateTime; // 时间戳                                    	 14位
+	private String MAC2; 			// 圈存mac2                8位
+	private String cardID;
 
-	public String getMessageDateTime() {
-		return messageDateTime;
+	public String getMAC2() {
+		return MAC2;
 	}
 
-	public void setMessageDateTime(String messageDateTime) {
-		this.messageDateTime = messageDateTime;
+	public void setMAC2(String MAC2) {
+		this.MAC2 = MAC2;
 	}
 
-	public String getMac2() {
-		return mac2;
+	public String getCardID() {
+		return cardID;
 	}
 
-	public void setMac2(String mac2) {
-		this.mac2 = mac2;
+	public void setCardID(String cardID) {
+		this.cardID = cardID;
 	}
-
-	public String getRespondeCode() {
-		return respondeCode;
-	}
-
-	public void setRespondeCode(String respondeCode) {
-		this.respondeCode = respondeCode;
-	}
-
 }

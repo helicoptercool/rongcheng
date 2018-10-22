@@ -27,9 +27,13 @@ import com.bsit.pboard.model.CardInfo;
 import com.bsit.pboard.model.MessageApplyWriteReq;
 import com.bsit.pboard.model.MessageApplyWriteRes;
 import com.bsit.pboard.model.MessageConfirmReq;
+import com.bsit.pboard.model.MessageQueryReq;
 import com.bsit.pboard.model.MessageQueryRes;
+import com.bsit.pboard.model.MonthTicketModifyReq;
+import com.bsit.pboard.model.MonthTicketModifyRes;
 import com.bsit.pboard.model.Rda;
 import com.bsit.pboard.utils.ByteUtil;
+import com.bsit.pboard.utils.MacUtils;
 import com.bsit.pboard.utils.ShellUtils;
 import com.bsit.pboard.utils.ToastUtils;
 import com.guozheng.urlhttputils.urlhttp.CallBackUtil;
@@ -115,6 +119,8 @@ public class MainActivity extends Activity {
     private String erroeCode;
     private String errorMsg;
     private SimpleDateFormat dff;
+    private String mOutTradeNo;
+    private String mWriteCardStatus;
 
     /**
      * Handler句柄模式
@@ -130,6 +136,8 @@ public class MainActivity extends Activity {
     private final static int INIT_NETWORK = 8;
     private final int CARD_HOUSE_CONSTRUCT = 100; //住建部
     private final int CARD_TRANSPORT = 200; //交通部
+    private final int TYPE_CHARGE = 1;
+    private final int TYPE_MONTY_TICKET = 2;
 
     private Handler handler = new Handler() {
         @Override
@@ -149,6 +157,9 @@ public class MainActivity extends Activity {
                 case SHOW_WELCOME_MSG_WHAT:
                     changeViewByType(0);
                     break;
+                case HttpBusiness.SIGN_IN_SUCEESS_CODE:
+
+                    break;
                 case HttpBusiness.ERROR_CODE:
                     errorMsg = (String) msg.obj;
                     changeViewByType(5);
@@ -156,6 +167,7 @@ public class MainActivity extends Activity {
                 case HttpBusiness.QUERY_ORDER_EROOR_CODE:
                     changeViewByType(2);
                     break;
+                case HttpBusiness.CONFIRM_RECHARGE_MONTH_EROOR_CODE:
                 case HttpBusiness.START_RECHARGECARD_EROOR_CODE:
                     erroeCode = (String) msg.obj;
                     rechargeResult = false;
@@ -168,13 +180,18 @@ public class MainActivity extends Activity {
                 case HttpBusiness.QUERY_ORDER_SUCEESS_CODE:
                     messageQueryRes = (MessageQueryRes) msg.obj;
                     changeViewByType(3);
-                    reloadAmount = messageQueryRes.getReloadAmount();
-                    rechargeId = messageQueryRes.getRechargeId();
-                    topInit();
+                    reloadAmount = messageQueryRes.getMoney();
+                    rechargeId = messageQueryRes.getOutTradeNo();
+                    topInit(messageQueryRes.getTradetype());
                     break;
                 case HttpBusiness.START_RECHARGECARD_SUCEESS_CODE:
                     MessageApplyWriteRes messageApplyWriteRes = (MessageApplyWriteRes) msg.obj;
-                    topRecharge(messageApplyWriteRes.getMac2(), messageApplyWriteRes.getMessageDateTime());
+//                    topRecharge(messageApplyWriteRes.getMAC2(), messageApplyWriteRes.getMessageDateTime());
+                    topRecharge(messageApplyWriteRes.getMAC2(), "");
+                    break;
+                case HttpBusiness.CONFIRM_RECHARGE_MONTH_SUCEESS_CODE:
+                    MonthTicketModifyRes monthTicket = (MonthTicketModifyRes) msg.obj;
+//                    topRecharge(monthTicket.getMAC2(), "");
                     break;
                 case HttpBusiness.CONFIRM_RECHARGE_SUCEESS_CODE:
                     rechargeResult = true;
@@ -237,8 +254,11 @@ public class MainActivity extends Activity {
                 if (!HttpBusiness.isNetworkAvailable(MainActivity.this)) {
                     ShellUtils.execCommand("./etc/ppp/init.quectel-pppd &", true);
                     netHandler.sendEmptyMessageDelayed(1, 2000);
+                    Log.i(TAG, "net check not ready");
                 } else {
+                    Log.i(TAG, "net check ready-----------");
                     netHandler.removeMessages(1);
+                    handler.sendEmptyMessage(FIND_CARD_MSG_WHAT);
                 }
             }
         }.start();
@@ -256,23 +276,22 @@ public class MainActivity extends Activity {
                 try {
                     csn = cardBusiness.findCard();
                     if (!TextUtils.isEmpty(csn)) {
-//                        cardInfo = cardBusiness.getCardInfoNew();
                         if (cardType == CARD_TRANSPORT) {
                             cardInfo = cardBusiness.readOtherCard();
                         } else {
                             cardInfo = cardBusiness.getCardInfo();
                         }
+//                        cardInfo = cardBusiness.readOtherCard();
                         Log.i(TAG, "card iii---iiii-----info = " + cardInfo.toString());
-                        cardBusiness.getTopInitInfo(cardInfo, "8888", deviceId);
+//                        cardBusiness.getTopInitInfo(cardInfo, "8888", deviceId);
                         if (cardInfo.getIsUse()) {
                             handler.sendEmptyMessage(SHOW_CARD_MSG_WHAT);
                         } else {
                             handler.sendEmptyMessage(NOT_USE_MSG_WHAT);
                         }
 //                        cityCode = "314" + Integer.parseInt(cardInfo.getCardNo().substring(9, 11)) % 10;
-//                        httpBusiness.signIn(handler);
-//                        httpBusiness.queryOrder(new MessageQueryReq(deviceId, cardInfo.getCardNo(), cityCode, csn,
-//                                cardInfo.getCardSType(), cardInfo.getCardMType(), cardInfo.getBalance()), handler);
+                        httpBusiness.signIn(handler);
+                        httpBusiness.queryOrder(new MessageQueryReq(MacUtils.getMac(), HttpBusiness.getTime(), cardInfo.getCardNo(), cardInfo.getBalance()), handler);
                     }
                 } catch (final CardBusiness.FindCardException e) {
                     cardInfo = null;
@@ -301,16 +320,28 @@ public class MainActivity extends Activity {
         }.start();
     }
 
-    private void topInit() {
+    private void topInit(final String tradeType) {
         new Thread() {
             @Override
             public void run() {
                 super.run();
                 try {
                     cardInfo = cardBusiness.getTopInitInfo(cardInfo, reloadAmount, deviceId);
-                    httpBusiness.rechargeCard(new MessageApplyWriteReq(deviceId, cityCode, cardInfo.getCardNo(), cardInfo.getCardMType(),
-                            cardInfo.getCardSType(), csn, "00", reloadAmount, cardInfo.getBalance(), cardInfo.getCardSeq(), cardInfo.getKeyVer(),
-                            cardInfo.getAlglnd(), cardInfo.getCardRand(), cardInfo.getQcMac(), messageQueryRes.getRechargeId()), handler);
+                    String cardType = "052"; //CPU卡
+                    if (tradeType.equals("01")) { //01 IC卡充值
+                        httpBusiness.rechargeCard(new MessageApplyWriteReq(MacUtils.getMac(), cardInfo.getCardNo(), cardType, messageQueryRes.getTradetype(),
+                                messageQueryRes.getOutTradeNo(), cardInfo.getCardRand(), cardInfo.getCardSeq(), cardInfo.getBalance(), messageQueryRes.getMoney(),
+                                cardInfo.getQcMac(), "", "", HttpBusiness.getTime()), handler);
+                    } else if (tradeType.equals("02")) { //02月票充值
+                        String data0015 = cardBusiness.getData0015();
+                        String ats = "";
+                        if(data0015.length()>16){
+                            ats = data0015.substring(data0015.length()-8,data0015.length());
+                        }
+                        httpBusiness.monthTicketModify(new MonthTicketModifyReq(MacUtils.getMac(), cardInfo.getCardNo(), messageQueryRes.getOutTradeNo(), cardType, data0015, ats, cardInfo.getCardRand()), handler);
+//                        httpBusiness.rechargeCard(new MessageApplyWriteReq(MacUtils.getMac(), cardInfo.getCardNo(), cardType, messageQueryRes.getTradetype(),
+//                                messageQueryRes.getOutTradeNo(), cardInfo.getCardRand(), cardInfo.getCardSeq(), cardInfo.getBalance(), messageQueryRes.getMoney(), cardInfo.getQcMac(), "", "", HttpBusiness.getTime()), handler);
+                    }
                 } catch (Exception e) {
                     rechargeResult = false;
                     erroeCode = e.getMessage();
@@ -330,8 +361,7 @@ public class MainActivity extends Activity {
                     cardInfo = cardBusiness.getTacFormTopUp(messageDateTime + mac2, cardInfo, reloadAmount);
                     String writeFlag = TextUtils.isEmpty(cardInfo.getTac()) ? "01" : "00";
                     Log.e("MAIN", "圈存结果：" + writeFlag);
-                    httpBusiness.confirmRecharge(new MessageConfirmReq(deviceId, messageDateTime, cityCode, cardInfo.getCardNo(), cardInfo.getCardSeq(),
-                            reloadAmount, cardInfo.getBalance(), cardInfo.getCardMType(), cardInfo.getTac(), rechargeId, writeFlag), handler);
+                    httpBusiness.confirmRecharge(new MessageConfirmReq(MacUtils.getMac(), cardInfo.getCardSeq(), mOutTradeNo, cardInfo.getCardMType(), mWriteCardStatus, cardInfo.getTac()), handler);
                 } catch (Exception e) {
                     rechargeResult = false;
                     erroeCode = e.getMessage();
@@ -434,7 +464,7 @@ public class MainActivity extends Activity {
 //        initLister();
         initTimeStamp();
         setWeekText();
-        handler.sendEmptyMessage(HEART_BEAT_MSG_WHAT);
+//        handler.sendEmptyMessage(HEART_BEAT_MSG_WHAT);
     }
 
     private void initView() {
@@ -481,12 +511,14 @@ public class MainActivity extends Activity {
         super.onResume();
 //        Tel.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
         changeViewByType(INIT_NETWORK);
+//        changeViewByType(0);
         new Thread() {
             @Override
             public void run() {
-                super.run();
                 if (!HttpBusiness.isNetworkAvailable(MainActivity.this)) {
                     netHandler.sendEmptyMessage(1);
+                }else {
+                    handler.sendEmptyMessage(SHOW_WELCOME_MSG_WHAT);
                 }
             }
         }.start();
@@ -495,7 +527,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        Tel.listen(MyListener, PhoneStateListener.LISTEN_NONE);
+//        Tel.listen(MyListener, PhoneStateListener.LISTEN_NONE);
     }
 
     @Override

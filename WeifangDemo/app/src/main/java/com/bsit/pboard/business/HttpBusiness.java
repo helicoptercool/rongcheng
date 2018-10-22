@@ -16,6 +16,8 @@ import com.bsit.pboard.model.MessageConfirmReq;
 import com.bsit.pboard.model.MessageConfirmRes;
 import com.bsit.pboard.model.MessageQueryReq;
 import com.bsit.pboard.model.MessageQueryRes;
+import com.bsit.pboard.model.MonthTicketModifyReq;
+import com.bsit.pboard.model.MonthTicketModifyRes;
 import com.bsit.pboard.model.Rda;
 import com.bsit.pboard.utils.MacUtils;
 import com.bsit.pboard.utils.ToastUtils;
@@ -46,6 +48,10 @@ public class HttpBusiness {
     public final static int CONFIRM_RECHARGE_SUCEESS_CODE = 102;
     public final static int CONFIRM_RECHARGE_EROOR_CODE = -102;
     public final static int HEART_BEAT_SUCEESS_CODE = 103;
+    public final static int CONFIRM_RECHARGE_MONTH_SUCEESS_CODE = 104;
+    public final static int CONFIRM_RECHARGE_MONTH_EROOR_CODE = -104;
+    public final static int SIGN_IN_SUCEESS_CODE = 105;
+    public final static int SIGN_IN_EROOR_CODE = -105;
 
     private HttpBusiness(Context context) {
         this.context = context;
@@ -73,14 +79,13 @@ public class HttpBusiness {
             return;
         }
         HashMap<String, String> paramsMap = new HashMap<String, String>();
-        paramsMap.put("deviceId", messageQueryReq.getDeviceId());
+        paramsMap.put("termId", messageQueryReq.getTermId());
+        paramsMap.put("messageDateTime", messageQueryReq.getMessageDateTime());
         paramsMap.put("cardId", messageQueryReq.getCardId());
-        paramsMap.put("cityCode", messageQueryReq.getCityCode());
-        paramsMap.put("csn", messageQueryReq.getCsn());
-        paramsMap.put("cardSType", messageQueryReq.getCardSType());
-        paramsMap.put("cardMType", messageQueryReq.getCardMType());
-        paramsMap.put("srcBal", messageQueryReq.getSrcBal());
-        UrlHttpUtil.post(Constants.QUERY_RECHARGEINFO_URL, paramsMap, new CallBackUtil.CallBackString() {
+        paramsMap.put("balance", messageQueryReq.getSrcBal());
+
+
+        UrlHttpUtil.post(Constants.URL_QUERY_ORDER, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
                 Message msg = handler.obtainMessage();
@@ -94,7 +99,7 @@ public class HttpBusiness {
                 Message msg = handler.obtainMessage();
                 BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>() {
                 }.getType());
-                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
                     msg.what = QUERY_ORDER_SUCEESS_CODE;
                     msg.obj = backInfoObject.getObj();
                 } else {
@@ -122,22 +127,21 @@ public class HttpBusiness {
             return;
         }
         HashMap<String, String> paramsMap = new HashMap<String, String>();
-        paramsMap.put("deviceId", messageApplyWriteReq.getDeviceId());
+        paramsMap.put("termId", messageApplyWriteReq.getTermId());
         paramsMap.put("cardId", messageApplyWriteReq.getCardId());
-        paramsMap.put("cityCode", messageApplyWriteReq.getCityCode());
-        paramsMap.put("csn", messageApplyWriteReq.getCsn());
-        paramsMap.put("cardSType", messageApplyWriteReq.getCardSType());
-        paramsMap.put("cardMType", messageApplyWriteReq.getCardMType());
-        paramsMap.put("srcBal", messageApplyWriteReq.getSrcBal());
-        paramsMap.put("deposit", messageApplyWriteReq.getDeposit());
-        paramsMap.put("reloadAmount", messageApplyWriteReq.getReloadAmount());
-        paramsMap.put("cardSequence", messageApplyWriteReq.getCardSequence());
-        paramsMap.put("rechargeId", messageApplyWriteReq.getRechargeId());
+        paramsMap.put("cardType", messageApplyWriteReq.getCardType());
+        paramsMap.put("tradetype", messageApplyWriteReq.getTradetype());
+        paramsMap.put("outTradeNo", messageApplyWriteReq.getOutTradeNo());
+        paramsMap.put("rndnumber", messageApplyWriteReq.getRndnumber());
+        paramsMap.put("cardTradeNo", messageApplyWriteReq.getCardTradeNo());
+        paramsMap.put("cardBalance", messageApplyWriteReq.getCardBalance());
+        paramsMap.put("tradeMoney", messageApplyWriteReq.getTradeMoney());
         paramsMap.put("mac1", messageApplyWriteReq.getMac1());
-        paramsMap.put("cardRand", messageApplyWriteReq.getCardRand());
-        paramsMap.put("alglnd", messageApplyWriteReq.getAlglnd());
-        paramsMap.put("keyVer", messageApplyWriteReq.getKeyVer());
-        UrlHttpUtil.post(Constants.START_RECHARGECARD_URL, paramsMap, new CallBackUtil.CallBackString() {
+        paramsMap.put("data0015", messageApplyWriteReq.getData0015());
+        paramsMap.put("base", messageApplyWriteReq.getBase());
+        paramsMap.put("messageDateTime", messageApplyWriteReq.getMessageDateTime());
+
+        UrlHttpUtil.post(Constants.URL_RECHARGE_APPLY, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
                 Message msg = handler.obtainMessage();
@@ -151,11 +155,61 @@ public class HttpBusiness {
                 Message msg = handler.obtainMessage();
                 BackInfoObject<MessageApplyWriteRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageApplyWriteRes>>() {
                 }.getType());
-                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
                     msg.what = START_RECHARGECARD_SUCEESS_CODE;
                     msg.obj = backInfoObject.getObj();
                 } else {
                     msg.what = START_RECHARGECARD_EROOR_CODE;
+                    msg.obj = backInfoObject.getStatus();
+                }
+                handler.sendMessage(msg);
+            }
+        });
+    }
+
+
+    /**
+     * CPU卡补登月票有效期修改（月票才需）
+     *
+     * @param handler
+     */
+    public static void monthTicketModify(MonthTicketModifyReq monthTicketReq, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
+            Message msg = handler.obtainMessage();
+            msg.what = ERROR_CODE;
+            msg.obj = "设备无网络";
+            handler.sendMessage(msg);
+            return;
+        }
+        HashMap<String, String> paramsMap = new HashMap<String, String>();
+
+        paramsMap.put("termId", monthTicketReq.getTermId());
+        paramsMap.put("cardId", monthTicketReq.getCardId());
+        paramsMap.put("outTradeNo", monthTicketReq.getOutTradeNo());
+        paramsMap.put("cardType", monthTicketReq.getCardType());
+        paramsMap.put("data0015", monthTicketReq.getData0015());
+        paramsMap.put("ats", monthTicketReq.getAts());
+        paramsMap.put("termTradeNo", monthTicketReq.getTermTradeNo());
+
+        UrlHttpUtil.post(Constants.URL_MONTY_TICKET_UPDATE, paramsMap, new CallBackUtil.CallBackString() {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+                Message msg = handler.obtainMessage();
+                msg.what = ERROR_CODE;
+                msg.obj = errorMessage;
+                handler.sendMessage(msg);
+            }
+
+            @Override
+            public void onResponse(String response) {
+                Message msg = handler.obtainMessage();
+                BackInfoObject<MonthTicketModifyRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MonthTicketModifyRes>>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
+                    msg.what = CONFIRM_RECHARGE_MONTH_SUCEESS_CODE;
+                    msg.obj = backInfoObject.getObj();
+                } else {
+                    msg.what = CONFIRM_RECHARGE_MONTH_EROOR_CODE;
                     msg.obj = backInfoObject.getStatus();
                 }
                 handler.sendMessage(msg);
@@ -179,18 +233,13 @@ public class HttpBusiness {
             return;
         }
         HashMap<String, String> paramsMap = new HashMap<String, String>();
-        paramsMap.put("deviceId", messageConfirmReq.getDeviceId());
+        paramsMap.put("termId", messageConfirmReq.getTermId());
         paramsMap.put("cardId", messageConfirmReq.getCardId());
-        paramsMap.put("cityCode", messageConfirmReq.getCityCode());
-        paramsMap.put("messageDateTime", messageConfirmReq.getMessageDateTime());
-        paramsMap.put("cardSequence", messageConfirmReq.getCardSequence());
-        paramsMap.put("reloadAmount", messageConfirmReq.getReloadAmount());
-        paramsMap.put("currentBalance", messageConfirmReq.getCurrentBalance());
-        paramsMap.put("cardMType", messageConfirmReq.getCardMType());
+        paramsMap.put("outTradeNo", messageConfirmReq.getOutTradeNo());
+        paramsMap.put("cardType", messageConfirmReq.getCardType());
+        paramsMap.put("status", messageConfirmReq.getStatus());
         paramsMap.put("tac", messageConfirmReq.getTac());
-        paramsMap.put("rechargeId", messageConfirmReq.getRechargeId());
-        paramsMap.put("writeFlag", messageConfirmReq.getWriteFlag());
-        UrlHttpUtil.post(Constants.CONFIRM_RECHARGEINFO_URL, paramsMap, new CallBackUtil.CallBackString() {
+        UrlHttpUtil.post(Constants.URL_RECHARGE_CONFIRM, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
                 Message msg = handler.obtainMessage();
@@ -204,7 +253,7 @@ public class HttpBusiness {
                 Message msg = handler.obtainMessage();
                 BackInfoObject backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject>() {
                 }.getType());
-                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
                     msg.what = CONFIRM_RECHARGE_SUCEESS_CODE;
                     msg.obj = backInfoObject.getObj();
                 } else {
@@ -329,22 +378,22 @@ public class HttpBusiness {
             @Override
             public void onResponse(String response) {
                 Log.i("*******", "sign ========== " + response);
-//                Message msg = handler.obtainMessage();
-//                BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>() {
-//                }.getType());
-//                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("09000")) {
-//                    msg.what = QUERY_ORDER_SUCEESS_CODE;
-//                    msg.obj = backInfoObject.getObj();
-//                } else {
-//                    msg.what = QUERY_ORDER_EROOR_CODE;
-//                    msg.obj = backInfoObject.getMessage();
-//                }
-//                handler.sendMessage(msg);
+                Message msg = handler.obtainMessage();
+                BackInfoObject backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
+                    msg.what = SIGN_IN_SUCEESS_CODE;
+                    msg.obj = backInfoObject.getObj();
+                } else {
+                    msg.what = SIGN_IN_EROOR_CODE;
+                    msg.obj = backInfoObject.getStatus();
+                }
+                handler.sendMessage(msg);
             }
         });
     }
 
-    private static String getTime() {
+    public static String getTime() {
         Calendar now = Calendar.getInstance();
         SimpleDateFormat dff = null;
         dff = new SimpleDateFormat("yyyyMMddHHmmss");
