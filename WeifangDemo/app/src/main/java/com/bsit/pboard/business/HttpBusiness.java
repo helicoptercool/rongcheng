@@ -35,10 +35,12 @@ import java.util.HashMap;
 import java.util.TimeZone;
 
 public class HttpBusiness {
+    private static final String TAG = "HttpBusiness";
     private static HttpBusiness httpBusiness;
     private static Context context;
     private static Gson gson = new Gson();
     private static SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+    private static String dealStamp = "";
 
     public final static int ERROR_CODE = -1;
     public final static int QUERY_ORDER_SUCEESS_CODE = 100;
@@ -88,6 +90,7 @@ public class HttpBusiness {
         UrlHttpUtil.post(Constants.URL_QUERY_ORDER, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
+                Log.i(TAG, "query order error = " + errorMessage);
                 Message msg = handler.obtainMessage();
                 msg.what = ERROR_CODE;
                 msg.obj = errorMessage;
@@ -96,6 +99,7 @@ public class HttpBusiness {
 
             @Override
             public void onResponse(String response) {
+                Log.i(TAG, "query order = " + response);
                 Message msg = handler.obtainMessage();
                 BackInfoObject<MessageQueryRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageQueryRes>>() {
                 }.getType());
@@ -399,6 +403,11 @@ public class HttpBusiness {
         dff = new SimpleDateFormat("yyyyMMddHHmmss");
         dff.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         String formatted = dff.format(now.getTime());
+        dealStamp = formatted;
         return formatted;
+    }
+
+    public static String getDealStamp() {
+        return dealStamp;
     }
 }
