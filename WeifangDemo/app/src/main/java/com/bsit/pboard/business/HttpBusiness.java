@@ -148,6 +148,7 @@ public class HttpBusiness {
         UrlHttpUtil.post(Constants.URL_RECHARGE_APPLY, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
+                Log.i(TAG, "rechargeCard failure = " + errorMessage);
                 Message msg = handler.obtainMessage();
                 msg.what = ERROR_CODE;
                 msg.obj = errorMessage;
@@ -156,6 +157,7 @@ public class HttpBusiness {
 
             @Override
             public void onResponse(String response) {
+                Log.i(TAG, "rechargeCard response = " + response);
                 Message msg = handler.obtainMessage();
                 BackInfoObject<MessageApplyWriteRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MessageApplyWriteRes>>() {
                 }.getType());
@@ -373,6 +375,7 @@ public class HttpBusiness {
         UrlHttpUtil.post(Constants.URL_SIGN_IN, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
+                Log.i(TAG, "sign failure === eeeeeeee");
                 Message msg = handler.obtainMessage();
                 msg.what = ERROR_CODE;
                 msg.obj = errorMessage;

@@ -1,17 +1,15 @@
 package com.bsit.pboard;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
@@ -24,27 +22,20 @@ import android.widget.TextView;
 import com.bsit.pboard.business.CardBusiness;
 import com.bsit.pboard.business.HttpBusiness;
 import com.bsit.pboard.model.CardInfo;
-import com.bsit.pboard.model.MessageApplyWriteReq;
 import com.bsit.pboard.model.MessageApplyWriteRes;
-import com.bsit.pboard.model.MessageConfirmReq;
-import com.bsit.pboard.model.MessageQueryReq;
 import com.bsit.pboard.model.MessageQueryRes;
-import com.bsit.pboard.model.MonthTicketModifyReq;
 import com.bsit.pboard.model.MonthTicketModifyRes;
 import com.bsit.pboard.model.Rda;
+import com.bsit.pboard.model.RechargeConfirmParm;
+import com.bsit.pboard.model.RechargeInitParm;
 import com.bsit.pboard.utils.ByteUtil;
+import com.bsit.pboard.utils.CardOperator;
+import com.bsit.pboard.utils.ConstantMsg;
 import com.bsit.pboard.utils.MacUtils;
 import com.bsit.pboard.utils.ShellUtils;
 import com.bsit.pboard.utils.ToastUtils;
-import com.guozheng.urlhttputils.urlhttp.CallBackUtil;
-import com.guozheng.urlhttputils.urlhttp.UrlHttpUtil;
+import com.bsit.pboard.utils.UpdateUtils;
 
-import android.text.TextUtils;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -52,22 +43,15 @@ import java.util.TimeZone;
 
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getName();
-    /**
-     * UI控件申明
-     **/
+
     private TextView dateTimeTv;
     private TextView weekDayTv;
-    //    private TextView cardNoTv;
     private TextView terminalNoTv;
     private TextView warnmingTv;
-    //    private TextView deviceNameTv;
     private TextView tipsMsgTv;
     private TextView tipsInfoTv;
-    //    private TextView snTv;
     private ImageView signalIntensityIv;
-    //    private ImageView qrIv;
     private ImageView image;
-    //    private RelativeLayout bottomRl;
     private RelativeLayout resultRl;
     private LinearLayout warnmingLl;
     private LinearLayout welcomeLl;
@@ -75,89 +59,297 @@ public class MainActivity extends Activity {
     private TextView tvCardNo;
     private TextView tvBalance;
 
-
-    /**
-     * 工具类申明
-     **/
-    private TelephonyManager Tel;
-    private MyPhoneStateListener MyListener;
-    private HttpBusiness httpBusiness;
+    private TelephonyManager mTelManager;
+    private MyPhoneStateListener mPhoneListener;
     private CardBusiness cardBusiness;
-
-    /* 开始PhoneState听众 */
-    private class MyPhoneStateListener extends PhoneStateListener {
-        /* 从得到的信号强度,每个tiome供应商有更新 */
-        @Override
-        public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-            super.onSignalStrengthsChanged(signalStrength);
-            int asu = signalStrength.getGsmSignalStrength();
-            if (asu <= 2 || asu == 99) {
-                signalIntensityIv.setImageResource(R.drawable.signal_intensity0);
-            } else if (asu >= 12) {
-                signalIntensityIv.setImageResource(R.drawable.signal_intensity4);
-            } else if (asu >= 8) {
-                signalIntensityIv.setImageResource(R.drawable.signal_intensity3);
-            } else if (asu >= 5) {
-                signalIntensityIv.setImageResource(R.drawable.signal_intensity2);
-            } else {
-                signalIntensityIv.setImageResource(R.drawable.signal_intensity1);
-            }
-        }
-    }
-
-    /**
-     * 全局变量申明
-     **/
     private CardInfo cardInfo;
     private MessageQueryRes messageQueryRes;
-    private boolean rechargeResult;
-    private String csn;
-    private String deviceId = "000020171214";
-    private String cityCode = "3149";
-    private String cpuCardType = "052"; //CPU卡
     private String reloadAmount;
-    private String rechargeId;
     private String erroeCode;
     private String errorMsg;
     private SimpleDateFormat dff;
     private String mOutTradeNo;
-    private String mWriteCardStatus;
-    private int mCardType;
     private boolean hasSignIn;
+    private boolean rechargeResult;
+
+    private Handler handler = new Mhandler();
+    private CardOperator mCdOperator;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        cardBusiness = CardBusiness.getInstance(this);
+        mCdOperator = new CardOperator(this, handler);
+        initView();
+        initLister();
+        initTimeStamp();
+        setWeekText();
+    }
+
+    private void initView() {
+        dateTimeTv = findViewById(R.id.date_time_tv);
+        weekDayTv = findViewById(R.id.week_day_tv);
+        terminalNoTv = findViewById(R.id.terminal_no_tv);
+        warnmingTv = findViewById(R.id.warnming_tv);
+        tipsMsgTv = findViewById(R.id.tips_loading_msg);
+        tipsInfoTv = findViewById(R.id.tips_loading_info);
+        signalIntensityIv = findViewById(R.id.signal_intensity_iv);
+        image = findViewById(R.id.image);
+        resultRl = findViewById(R.id.result_ll);
+        warnmingLl = findViewById(R.id.warnming_ll);
+        welcomeLl = findViewById(R.id.welcome_ll);
+        cardInfoLl = findViewById(R.id.card_info_ll);
+        tvCardNo = findViewById(R.id.tv_card_no);
+        tvBalance = findViewById(R.id.tv_balance);
+    }
+
+    private void initTimeStamp() {
+        dff = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dff.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        dateTimeTv.setText(dff.format(new Date()));
+        handler.sendEmptyMessageDelayed(ConstantMsg.UPDATE_TIME_MSG_WHAT, 1000);
+    }
+
+    private void initLister() {
+        mPhoneListener = new MyPhoneStateListener();
+        mTelManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        assert mTelManager != null;
+        mTelManager.listen(mPhoneListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+    }
+
+    private void setWeekText() {
+        Date date = new Date();
+        SimpleDateFormat dateFm = new SimpleDateFormat("EEEE");
+        weekDayTv.setText(dateFm.format(date));
+        initTimeStamp();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        mTelManager.listen(mPhoneListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        changeViewByType(ConstantMsg.INIT_NETWORK);
+        if (!HttpBusiness.isNetworkAvailable(MainActivity.this)) {
+            handler.sendEmptyMessage(ConstantMsg.INIT_NETWORK);
+        } else {
+            mCdOperator.signIn();
+            handler.sendEmptyMessage(ConstantMsg.SHOW_WELCOME_MSG_WHAT);
+        }
+    }
+
 
     /**
-     * Handler句柄模式
-     **/
-    private final static int FIND_CARD_MSG_WHAT = -2;
-    private final static int UPDATE_TIME_MSG_WHAT = 0;
-    private final static int HEART_BEAT_MSG_WHAT = 1;
-    private final static int SHOW_WELCOME_MSG_WHAT = 2;
-    private final static int SHOW_FAILDREADCARD_MSG_WHAT = 3;
-    private final static int SHOW_FAILDRECHARGE_MSG_WHAT = 4;
-    private final static int SHOW_CARD_MSG_WHAT = 6;
-    private final static int NOT_USE_MSG_WHAT = 7;
-    private final static int INIT_NETWORK = 8;
-    private final int CARD_HOUSE_CONSTRUCT = 100; //住建部
-    private final int CARD_TRANSPORT = 200; //交通部
-    private final int TYPE_CHARGE = 1;
-    private final int TYPE_MONTY_TICKET = 2;
+     * 网络检测
+     */
+    private void netChecker() {
+        if (!HttpBusiness.isNetworkAvailable(MainActivity.this)) {
+            ShellUtils.execCommand("./etc/ppp/init.quectel-pppd &", true);
+            handler.sendEmptyMessageDelayed(ConstantMsg.INIT_NETWORK, 2000);
+        } else {
+            handler.removeMessages(ConstantMsg.INIT_NETWORK);
+            mCdOperator.signIn();
+            handler.sendEmptyMessage(ConstantMsg.FIND_CARD_MSG_WHAT);
+        }
+    }
 
-    private Handler handler = new Handler() {
+    private void findCard() {
+        mCdOperator.findCard();
+    }
+
+    /**
+     * 圈存初始化
+     */
+    private void topInit(String tradeType, String money) {
+        //"tradetype":"01","money":"100","startdate":"","enddate":"","datedif":"","outTradeNo":"201810231006261865"
+        tradeType = "01";
+        money = "100";
+        RechargeInitParm parm = new RechargeInitParm(tradeType, money, MacUtils.getMac(), messageQueryRes);
+        mCdOperator.rechargeInit(parm);
+    }
+
+    /**
+     * 圈存
+     *
+     */
+    /*private void topRecharge(final String mac2, final String messageDateTime) {
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    cardInfo = cardBusiness.getTacFormTopUp(messageDateTime + mac2, cardInfo, reloadAmount);
+                    String writeFlag = TextUtils.isEmpty(cardInfo.getTac()) ? "01" : "00";
+                    Log.e("MAIN", "圈存结果：" + writeFlag);
+                    httpBusiness.confirmRecharge(new MessageConfirmReq(MacUtils.getMac(), cardInfo.getCardSeq(), mOutTradeNo, cpuCardType, mWriteCardStatus, cardInfo.getTac()), handler);
+                } catch (Exception e) {
+                    rechargeResult = false;
+                    erroeCode = e.getMessage();
+                    Log.e("MAIN", "圈存错误：" + erroeCode);
+                    handler.sendEmptyMessage(ConstantMsg.SHOW_FAILDRECHARGE_MSG_WHAT);
+                }
+            }
+        }.start();
+    }*/
+
+    /**
+     * 圈存
+     */
+    private void topRecharge(final String mac2, final String messageDateTime) {
+        try {
+            cardInfo = CardBusiness.getTacFormTopUp(messageDateTime + mac2, cardInfo, reloadAmount);
+            String writeFlag = TextUtils.isEmpty(cardInfo.getTac()) ? "01" : "00";
+            Log.e("MAIN", "圈存结果：" + writeFlag);
+            mCdOperator.setCardInfo(cardInfo);
+            mCdOperator.rechargeConfirm(new RechargeConfirmParm(mOutTradeNo, writeFlag));
+//            httpBusiness.confirmRecharge(new MessageConfirmReq(MacUtils.getMac(), cardInfo.getCardSeq(), mOutTradeNo, cpuCardType, mWriteCardStatus, cardInfo.getTac()), handler);
+        } catch (Exception e) {
+            rechargeResult = false;
+            erroeCode = e.getMessage();
+            Log.e("MAIN", "圈存错误：" + erroeCode);
+            handler.sendEmptyMessage(ConstantMsg.SHOW_FAILDRECHARGE_MSG_WHAT);
+        }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mTelManager.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
+    }
+
+/*    private void initSetting() {
+        Settings.Global.putInt(getContentResolver(), Settings.Global.AUTO_TIME, 1);
+        AlarmManager mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        mAlarmManager.setTimeZone("Asia/Shanghai");
+    }*/
+
+    private void changeViewByType(int type) {
+        cardInfoLl.setVisibility(View.GONE);
+        switch (type) {
+            case 0: //欢迎界面
+                resultRl.setVisibility(View.GONE);
+                warnmingLl.setVisibility(View.GONE);
+                cardInfoLl.setVisibility(View.GONE);
+                welcomeLl.setVisibility(View.VISIBLE);
+                String snId = getSharedPreferences("deviceInfo", MODE_PRIVATE).getString("snId", "");
+                if (TextUtils.isEmpty(snId)) {
+                    try {
+                        snId = cardBusiness.getSN();
+                        Log.i(TAG, "sn no ============ " + snId);
+                        getSharedPreferences("deviceInfo", MODE_PRIVATE).edit().putString("sbId", snId);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (TextUtils.isEmpty(snId)) {
+                    snId = Build.SERIAL;
+                }
+                terminalNoTv.setText(snId);
+                handler.sendEmptyMessage(ConstantMsg.FIND_CARD_MSG_WHAT);
+                break;
+            case 1: //无效卡
+                resultRl.setVisibility(View.GONE);
+                warnmingLl.setVisibility(View.VISIBLE);
+                warnmingTv.setText("无效卡");
+                welcomeLl.setVisibility(View.GONE);
+                handler.sendEmptyMessageDelayed(ConstantMsg.SHOW_WELCOME_MSG_WHAT, 2000);
+                break;
+            case 2: //无补登订单
+                resultRl.setVisibility(View.GONE);
+                warnmingLl.setVisibility(View.VISIBLE);
+                warnmingTv.setText("未查询到待补登充值订单");
+                welcomeLl.setVisibility(View.GONE);
+                handler.sendEmptyMessageDelayed(ConstantMsg.SHOW_WELCOME_MSG_WHAT, 6000);
+                break;
+            case 3: //补登充值中
+                resultRl.setVisibility(View.VISIBLE);
+                warnmingLl.setVisibility(View.GONE);
+                welcomeLl.setVisibility(View.GONE);
+                showLoading("正在进行补充值", "请勿移动卡片");
+                break;
+            case 4: //补登结果
+                image.clearAnimation();
+                resultRl.setVisibility(View.VISIBLE);
+                warnmingLl.setVisibility(View.GONE);
+                welcomeLl.setVisibility(View.GONE);
+                if (rechargeResult) {
+                    image.setImageResource(R.drawable.icon_budnegchengong);
+                    tipsMsgTv.setText("充值成功！  " + "余额：" + ByteUtil.toAmountString(ByteUtil.pasInt(cardInfo.getBalance()) / 100.0f));
+                    tipsInfoTv.setText("请移除卡片");
+                    handler.sendEmptyMessageDelayed(ConstantMsg.SHOW_WELCOME_MSG_WHAT, 3000);
+                } else {
+                    image.setImageResource(R.drawable.icon_budnegshibai);
+                    tipsMsgTv.setText("错误代码：" + erroeCode);
+                    tipsInfoTv.setText("充值失败 请贴卡重试！");
+                    handler.sendEmptyMessageDelayed(ConstantMsg.SHOW_WELCOME_MSG_WHAT, 3000);
+                }
+                break;
+            case 5: //网络请求错误
+                if (cardInfo == null) {
+                    resultRl.setVisibility(View.GONE);
+                    warnmingTv.setText(errorMsg);
+                    warnmingLl.setVisibility(View.VISIBLE);
+                    welcomeLl.setVisibility(View.GONE);
+                } else {
+                    resultRl.setVisibility(View.GONE);
+                    warnmingLl.setVisibility(View.VISIBLE);
+                    if (TextUtils.isEmpty(errorMsg)) {
+                        errorMsg = "未知错误";
+                    }
+                    warnmingTv.setText(errorMsg);
+                    welcomeLl.setVisibility(View.GONE);
+                }
+                handler.sendEmptyMessageDelayed(ConstantMsg.SHOW_WELCOME_MSG_WHAT, 3000);
+                break;
+            case ConstantMsg.SHOW_CARD_MSG_WHAT: //显示卡号，余额
+                welcomeLl.setVisibility(View.GONE);
+                cardInfoLl.setVisibility(View.VISIBLE);
+                tvCardNo.setText(cardInfo.getCardNo());
+                if (cardInfo.getBalance() == null) {
+                    tvBalance.setText("0");
+                } else {
+                    tvBalance.setText(ByteUtil.toAmountString(ByteUtil.pasInt(cardInfo.getBalance()) / 100.0f));
+                }
+                break;
+            case ConstantMsg.NOT_USE_MSG_WHAT:
+                resultRl.setVisibility(View.GONE);
+                warnmingLl.setVisibility(View.VISIBLE);
+                warnmingTv.setText(getString(R.string.str_no_permitted_card));
+                welcomeLl.setVisibility(View.GONE);
+                handler.sendEmptyMessageDelayed(ConstantMsg.SHOW_WELCOME_MSG_WHAT, 2000);
+                break;
+            case ConstantMsg.INIT_NETWORK:
+                welcomeLl.setVisibility(View.GONE);
+                resultRl.setVisibility(View.GONE);
+                warnmingLl.setVisibility(View.VISIBLE);
+                warnmingTv.setText(getString(R.string.str_init_network));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void showLoading(String msg, String info) {
+        Animation hyperspaceJumpAnimation = AnimationUtils.loadAnimation(this, R.anim.anim_loading);
+        image.setImageResource(R.drawable.animation);
+        image.startAnimation(hyperspaceJumpAnimation);
+        tipsMsgTv.setText(msg);
+        tipsInfoTv.setText(info);
+    }
+
+    private class Mhandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
+            String cityCode = "3149";
             switch (msg.what) {
-                case FIND_CARD_MSG_WHAT:
-                    removeMessages(FIND_CARD_MSG_WHAT);
-                    findCard(msg.arg1);
+                case ConstantMsg.FIND_CARD_MSG_WHAT:
+                    removeMessages(ConstantMsg.FIND_CARD_MSG_WHAT);
+                    findCard();
                     break;
-                case HEART_BEAT_MSG_WHAT:
-                    if (!TextUtils.isEmpty(cityCode) && !TextUtils.isEmpty(deviceId)) {
-                        HttpBusiness.heartBeat(deviceId, cityCode, getVerName(MainActivity.this), "", handler);
-                    }
-                    sendEmptyMessageDelayed(HEART_BEAT_MSG_WHAT, 600000);
-                    break;
-                case SHOW_WELCOME_MSG_WHAT:
+                case ConstantMsg.SHOW_WELCOME_MSG_WHAT:
                     changeViewByType(0);
                     break;
                 case HttpBusiness.SIGN_IN_SUCEESS_CODE:
@@ -187,8 +379,8 @@ public class MainActivity extends Activity {
                     messageQueryRes = (MessageQueryRes) msg.obj;
                     changeViewByType(3);
                     reloadAmount = messageQueryRes.getMoney();
-                    rechargeId = messageQueryRes.getOutTradeNo();
-                    topInit(messageQueryRes.getTradetype());
+                    mOutTradeNo = messageQueryRes.getOutTradeNo();
+                    topInit(messageQueryRes.getTradetype(), messageQueryRes.getMoney());
                     break;
                 case HttpBusiness.START_RECHARGECARD_SUCEESS_CODE:
                     MessageApplyWriteRes messageApplyWriteRes = (MessageApplyWriteRes) msg.obj;
@@ -205,485 +397,55 @@ public class MainActivity extends Activity {
                     changeViewByType(4);
                     break;
                 case HttpBusiness.HEART_BEAT_SUCEESS_CODE:
-                    upVersion((Rda) msg.obj);
+                    UpdateUtils.upVersion((Rda) msg.obj);
                     break;
-                case SHOW_FAILDREADCARD_MSG_WHAT:
+                case ConstantMsg.SHOW_FAILDREADCARD_MSG_WHAT:
                     changeViewByType(1);
                     break;
-                case SHOW_FAILDRECHARGE_MSG_WHAT:
+                case ConstantMsg.SHOW_FAILDRECHARGE_MSG_WHAT:
                     rechargeResult = false;
                     changeViewByType(4);
                     break;
-                case SHOW_CARD_MSG_WHAT:
-                    changeViewByType(SHOW_CARD_MSG_WHAT);
+                case ConstantMsg.SHOW_CARD_MSG_WHAT:
+                    cardInfo = (CardInfo) msg.obj;
+                    changeViewByType(ConstantMsg.SHOW_CARD_MSG_WHAT);
                     break;
-                case NOT_USE_MSG_WHAT:
-                    changeViewByType(NOT_USE_MSG_WHAT);
+                case ConstantMsg.NOT_USE_MSG_WHAT:
+                    changeViewByType(ConstantMsg.NOT_USE_MSG_WHAT);
+                    break;
+                case ConstantMsg.UPDATE_TIME_MSG_WHAT:
+                    setWeekText();
+                    break;
+                case ConstantMsg.INIT_NETWORK:
+                    netChecker();
+                    break;
+                case ConstantMsg.UNRECOGNIZE_CARD:
+                    ToastUtils.showToast(getString(R.string.str_card_not_distinguish), MainActivity.this);
                     break;
                 default:
                     break;
             }
         }
-    };
+    }
 
-
-    private Handler timeHandler = new Handler() {
+    /* 开始PhoneState听众 */
+    private class MyPhoneStateListener extends PhoneStateListener {
+        /* 从得到的信号强度,每个tiome供应商有更新 */
         @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case UPDATE_TIME_MSG_WHAT:
-                    setWeekText();
-                    break;
+        public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+            super.onSignalStrengthsChanged(signalStrength);
+            int asu = signalStrength.getGsmSignalStrength();
+            if (asu <= 2 || asu == 99) {
+                signalIntensityIv.setImageResource(R.drawable.signal_intensity0);
+            } else if (asu >= 12) {
+                signalIntensityIv.setImageResource(R.drawable.signal_intensity4);
+            } else if (asu >= 8) {
+                signalIntensityIv.setImageResource(R.drawable.signal_intensity3);
+            } else if (asu >= 5) {
+                signalIntensityIv.setImageResource(R.drawable.signal_intensity2);
+            } else {
+                signalIntensityIv.setImageResource(R.drawable.signal_intensity1);
             }
         }
-    };
-
-    /**
-     * 网络句柄对象
-     **/
-    private Handler netHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            netChecker();
-        }
-    };
-
-    /**
-     * 网络检测
-     */
-    private void netChecker() {
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                if (!HttpBusiness.isNetworkAvailable(MainActivity.this)) {
-                    ShellUtils.execCommand("./etc/ppp/init.quectel-pppd &", true);
-                    netHandler.sendEmptyMessageDelayed(1, 2000);
-                    Log.i(TAG, "net check not ready");
-                } else {
-                    Log.i(TAG, "net check ready-----------");
-                    netHandler.removeMessages(1);
-                    httpBusiness.signIn(handler);
-                    handler.sendEmptyMessage(FIND_CARD_MSG_WHAT);
-                }
-            }
-        }.start();
-    }
-
-    private void findCard(final int cardType) {
-        mCardType = cardType;
-        Log.i(TAG, "find card sss----sss---sss---ssstart");
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    csn = cardBusiness.findCard();
-                    if (!TextUtils.isEmpty(csn)) {
-                        if (cardType == CARD_TRANSPORT) {
-                            cardInfo = cardBusiness.readOtherCard();
-                        } else {
-                            cardInfo = cardBusiness.getCardInfo();
-                        }
-//                        cardInfo = cardBusiness.readOtherCard();
-                        Log.i(TAG, "card iii---iiii-----info = " + cardInfo.toString());
-                        httpBusiness.queryOrder(new MessageQueryReq(MacUtils.getMac(), HttpBusiness.getTime(), cardInfo.getCardNo(), cardInfo.getBalance()), handler);
-//                        cardBusiness.getTopInitInfo(cardInfo, "8888", deviceId);
-                        if (cardInfo.getIsUse()) {
-                            handler.sendEmptyMessage(SHOW_CARD_MSG_WHAT);
-                        } else {
-                            handler.sendEmptyMessage(NOT_USE_MSG_WHAT);
-                        }
-//                        cityCode = "314" + Integer.parseInt(cardInfo.getCardNo().substring(9, 11)) % 10;
-                    }
-                } catch (final CardBusiness.FindCardException e) {
-                    cardInfo = null;
-                    handler.sendEmptyMessageDelayed(FIND_CARD_MSG_WHAT, 1000);
-                } catch (final CardBusiness.ReadCardException e) {
-                    cardInfo = null;
-                    if (e.getMessage().equals(getString(R.string.str_get_main_dir_failure))) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                ToastUtils.showToast(getString(R.string.str_card_not_distinguish), MainActivity.this);
-                            }
-                        });
-                    }
-                    if (cardType == CARD_TRANSPORT) {
-                        mCardType = CARD_HOUSE_CONSTRUCT;
-                    } else {
-                        mCardType = CARD_TRANSPORT;
-                    }
-                    Message message = handler.obtainMessage();
-                    message.arg1 = mCardType;
-                    message.what = FIND_CARD_MSG_WHAT;
-                    handler.sendMessageDelayed(message, 1000);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-    }
-
-    private void topInit(final String tradeType) {
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    cardInfo = cardBusiness.getTopInitInfo(cardInfo, reloadAmount, deviceId);
-                    if (tradeType.equals("01")) { //01 IC卡充值
-                        httpBusiness.rechargeCard(new MessageApplyWriteReq(MacUtils.getMac(), cardInfo.getCardNo(), cpuCardType, messageQueryRes.getTradetype(),
-                                messageQueryRes.getOutTradeNo(), cardInfo.getCardRand(), cardInfo.getCardSeq(), cardInfo.getBalance(), messageQueryRes.getMoney(),
-                                cardInfo.getQcMac(), "", "", HttpBusiness.getTime()), handler);
-                    } else if (tradeType.equals("02")) { //02月票充值
-                        String data0015 = cardBusiness.getData0015();
-                        String ats = "";
-                        if (data0015.length() > 16) {
-                            ats = data0015.substring(data0015.length() - 8, data0015.length());
-                        }
-                        httpBusiness.monthTicketModify(new MonthTicketModifyReq(MacUtils.getMac(), cardInfo.getCardNo(), messageQueryRes.getOutTradeNo(), cpuCardType, data0015, ats, cardInfo.getCardRand()), handler);
-//                        httpBusiness.rechargeCard(new MessageApplyWriteReq(MacUtils.getMac(), cardInfo.getCardNo(), cardType, messageQueryRes.getTradetype(),
-//                                messageQueryRes.getOutTradeNo(), cardInfo.getCardRand(), cardInfo.getCardSeq(), cardInfo.getBalance(), messageQueryRes.getMoney(), cardInfo.getQcMac(), "", "", HttpBusiness.getTime()), handler);
-                    }
-                } catch (Exception e) {
-                    rechargeResult = false;
-                    erroeCode = e.getMessage();
-                    handler.sendEmptyMessage(SHOW_FAILDRECHARGE_MSG_WHAT);
-                }
-            }
-        }.start();
-    }
-
-
-    private void topRecharge(final String mac2, final String messageDateTime) {
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    cardInfo = cardBusiness.getTacFormTopUp(messageDateTime + mac2, cardInfo, reloadAmount);
-                    String writeFlag = TextUtils.isEmpty(cardInfo.getTac()) ? "01" : "00";
-                    Log.e("MAIN", "圈存结果：" + writeFlag);
-                    httpBusiness.confirmRecharge(new MessageConfirmReq(MacUtils.getMac(), cardInfo.getCardSeq(), mOutTradeNo, cpuCardType, mWriteCardStatus, cardInfo.getTac()), handler);
-                } catch (Exception e) {
-                    rechargeResult = false;
-                    erroeCode = e.getMessage();
-                    Log.e("MAIN", "圈存错误：" + erroeCode);
-                    handler.sendEmptyMessage(SHOW_FAILDRECHARGE_MSG_WHAT);
-                }
-            }
-        }.start();
-    }
-
-    private String installSilently(String path) {
-
-        // 通过命令行来安装APK
-        String[] args = {"pm", "install", "-r", path};
-        String result = "";
-        // 创建一个操作系统进程并执行命令行操作
-        ProcessBuilder processBuilder = new ProcessBuilder(args);
-        Process process = null;
-        InputStream errIs = null;
-        InputStream inIs = null;
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            int read = -1;
-            process = processBuilder.start();
-            errIs = process.getErrorStream();
-            while ((read = errIs.read()) != -1) {
-                baos.write(read);
-            }
-            baos.write('\n');
-            inIs = process.getInputStream();
-            while ((read = inIs.read()) != -1) {
-                baos.write(read);
-            }
-            byte[] data = baos.toByteArray();
-            result = new String(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (errIs != null) {
-                    errIs.close();
-                }
-                if (inIs != null) {
-                    inIs.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (process != null) {
-                process.destroy();
-            }
-        }
-        return result;
-    }
-
-    private void upVersion(Rda rda) {
-        UrlHttpUtil.downloadFile(rda.getBhPath(), new CallBackUtil.CallBackFile("/sdcard", rda.getBhVer() + ".apk") {
-            @Override
-            public void onFailure(int code, String errorMessage) {
-
-            }
-
-            @Override
-            public void onResponse(File response) {
-                if (response != null) {
-                    installSilently(response.getPath());
-                }
-            }
-        });
-    }
-
-    /**
-     * 获取版本号名称
-     *
-     * @param context 上下文
-     * @return
-     */
-    public static String getVerName(Context context) {
-        String verName = "";
-        try {
-            verName = context.getPackageManager().
-                    getPackageInfo(context.getPackageName(), 0).versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return verName;
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-//        httpBusiness = HttpBusiness.getInstance(this);
-        cardBusiness = CardBusiness.getInstance(this);
-        initView();
-//        HttpBusiness.setGprsEnabled(this, true);
-//        initSetting();
-//        initLister();
-        initTimeStamp();
-        setWeekText();
-//        handler.sendEmptyMessage(HEART_BEAT_MSG_WHAT);
-    }
-
-    private void initView() {
-        dateTimeTv = (TextView) findViewById(R.id.date_time_tv);
-        weekDayTv = findViewById(R.id.week_day_tv);
-//        cardNoTv = (TextView) findViewById(R.id.card_no_tv);
-        terminalNoTv = (TextView) findViewById(R.id.terminal_no_tv);
-        warnmingTv = (TextView) findViewById(R.id.warnming_tv);
-        tipsMsgTv = (TextView) findViewById(R.id.tips_loading_msg);
-        tipsInfoTv = (TextView) findViewById(R.id.tips_loading_info);
-//        snTv = (TextView) findViewById(R.id.sn_tv);
-        signalIntensityIv = (ImageView) findViewById(R.id.signal_intensity_iv);
-        image = (ImageView) findViewById(R.id.image);
-//        bottomRl = (RelativeLayout) findViewById(R.id.bottom_rl);
-        resultRl = (RelativeLayout) findViewById(R.id.result_ll);
-        warnmingLl = (LinearLayout) findViewById(R.id.warnming_ll);
-        welcomeLl = (LinearLayout) findViewById(R.id.welcome_ll);
-        cardInfoLl = (LinearLayout) findViewById(R.id.card_info_ll);
-        tvCardNo = (TextView) findViewById(R.id.tv_card_no);
-        tvBalance = (TextView) findViewById(R.id.tv_balance);
-    }
-
-    private void initTimeStamp() {
-        dff = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        dff.setTimeZone(TimeZone.getTimeZone("GMT+8"));
-        dateTimeTv.setText(dff.format(new Date()));
-        timeHandler.sendEmptyMessageDelayed(UPDATE_TIME_MSG_WHAT, 1000);
-    }
-
-    private void initLister() {
-        MyListener = new MyPhoneStateListener();
-        Tel = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        Tel.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-    }
-
-    private void setWeekText() {
-        Date date = new Date();
-        SimpleDateFormat dateFm = new SimpleDateFormat("EEEE");
-        weekDayTv.setText(dateFm.format(date));
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-//        Tel.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-        changeViewByType(INIT_NETWORK);
-//        changeViewByType(0);
-        new Thread() {
-            @Override
-            public void run() {
-                if (!HttpBusiness.isNetworkAvailable(MainActivity.this)) {
-                    netHandler.sendEmptyMessage(1);
-                } else {
-                    httpBusiness.signIn(handler);
-                    handler.sendEmptyMessage(SHOW_WELCOME_MSG_WHAT);
-                }
-            }
-        }.start();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-//        Tel.listen(MyListener, PhoneStateListener.LISTEN_NONE);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    private void initSetting() {
-        Settings.Global.putInt(getContentResolver(), Settings.Global.AUTO_TIME, 1);
-        AlarmManager mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        mAlarmManager.setTimeZone("Asia/Shanghai");
-    }
-
-    private void changeViewByType(int type) {
-        cardInfoLl.setVisibility(View.GONE);
-        switch (type) {
-            case 0: //欢迎界面
-//                bottomRl.setVisibility(View.GONE);
-                resultRl.setVisibility(View.GONE);
-                warnmingLl.setVisibility(View.GONE);
-                cardInfoLl.setVisibility(View.GONE);
-                welcomeLl.setVisibility(View.VISIBLE);
-                String snId = getSharedPreferences("deviceInfo", MODE_PRIVATE).getString("snId", "");
-                if (TextUtils.isEmpty(snId)) {
-                    try {
-                        Log.i(TAG, "sn no &&&&&&&&&&&& " + snId);
-                        snId = cardBusiness.getSN();
-                        Log.i(TAG, "sn no ============ " + snId);
-                        getSharedPreferences("deviceInfo", MODE_PRIVATE).edit().putString("sbId", snId);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (TextUtils.isEmpty(snId)) {
-                    snId = Build.SERIAL;
-                }
-
-//                qrIv.setImageBitmap(QRCodeUtil.creatBarcode(
-//                        getApplicationContext(), snId, 80, 40, false));
-//                snTv.setText(snId);
-                terminalNoTv.setText(snId);
-                handler.sendEmptyMessage(FIND_CARD_MSG_WHAT);
-                break;
-            case 1: //无效卡
-//                bottomRl.setVisibility(View.GONE);
-                resultRl.setVisibility(View.GONE);
-                warnmingLl.setVisibility(View.VISIBLE);
-                warnmingTv.setText("无效卡");
-                welcomeLl.setVisibility(View.GONE);
-                handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 2000);
-                break;
-            case 2: //无补登订单
-//                bottomRl.setVisibility(View.VISIBLE);
-//                cardNoTv.setText(cardInfo.getCardNo());
-                resultRl.setVisibility(View.GONE);
-                warnmingLl.setVisibility(View.VISIBLE);
-                warnmingTv.setText("未查询到待补登充值订单");
-                welcomeLl.setVisibility(View.GONE);
-                handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 6000);
-                break;
-            case 3: //补登充值中
-//                bottomRl.setVisibility(View.VISIBLE);
-//                cardNoTv.setText(cardInfo.getCardNo());
-                resultRl.setVisibility(View.VISIBLE);
-                warnmingLl.setVisibility(View.GONE);
-                welcomeLl.setVisibility(View.GONE);
-                showLoading("正在进行补充值", "请勿移动卡片");
-                break;
-            case 4: //补登结果
-                image.clearAnimation();
-//                bottomRl.setVisibility(View.VISIBLE);
-//                cardNoTv.setText(cardInfo.getCardNo());
-                resultRl.setVisibility(View.VISIBLE);
-                warnmingLl.setVisibility(View.GONE);
-                welcomeLl.setVisibility(View.GONE);
-                if (rechargeResult) {
-                    image.setImageResource(R.drawable.icon_budnegchengong);
-                    tipsMsgTv.setText("充值成功！  " + "余额：" + ByteUtil.toAmountString(ByteUtil.pasInt(cardInfo.getBalance()) / 100.0f));
-                    tipsInfoTv.setText("请移除卡片");
-                    handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 3000);
-                } else {
-                    image.setImageResource(R.drawable.icon_budnegshibai);
-                    tipsMsgTv.setText("错误代码：" + erroeCode);
-                    tipsInfoTv.setText("充值失败 请贴卡重试！");
-                    handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 3000);
-                }
-                break;
-            case 5: //网络请求错误
-                if (cardInfo == null) {
-//                    bottomRl.setVisibility(View.GONE);
-                    resultRl.setVisibility(View.GONE);
-//                    warnmingLl.setVisibility(View.GONE);
-//                    welcomeLl.setVisibility(View.VISIBLE);
-                    warnmingTv.setText(errorMsg);
-                    warnmingLl.setVisibility(View.VISIBLE);
-                    welcomeLl.setVisibility(View.GONE);
-                } else {
-//                    bottomRl.setVisibility(View.VISIBLE);
-//                    cardNoTv.setText(cardInfo.getCardNo());
-                    resultRl.setVisibility(View.GONE);
-                    warnmingLl.setVisibility(View.VISIBLE);
-                    if (TextUtils.isEmpty(errorMsg)) {
-                        errorMsg = "未知错误";
-                    }
-                    warnmingTv.setText(errorMsg);
-                    welcomeLl.setVisibility(View.GONE);
-                }
-                handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 3000);
-                break;
-            case SHOW_CARD_MSG_WHAT: //显示卡号，余额
-                welcomeLl.setVisibility(View.GONE);
-                cardInfoLl.setVisibility(View.VISIBLE);
-                tvCardNo.setText(cardInfo.getCardNo());
-                if (cardInfo.getBalance() == null) {
-                    tvBalance.setText("0");
-                } else {
-                    tvBalance.setText(ByteUtil.toAmountString(ByteUtil.pasInt(cardInfo.getBalance()) / 100.0f));
-                }
-                break;
-            case NOT_USE_MSG_WHAT:
-//                bottomRl.setVisibility(View.VISIBLE);
-//                cardNoTv.setText(cardInfo.getCardNo());
-                resultRl.setVisibility(View.GONE);
-                warnmingLl.setVisibility(View.VISIBLE);
-                warnmingTv.setText(getString(R.string.str_no_permitted_card));
-                welcomeLl.setVisibility(View.GONE);
-                handler.sendEmptyMessageDelayed(SHOW_WELCOME_MSG_WHAT, 2000);
-                break;
-            case INIT_NETWORK:
-//                bottomRl.setVisibility(View.GONE);
-//                cardNoTv.setText(cardInfo.getCardNo());
-                welcomeLl.setVisibility(View.GONE);
-                resultRl.setVisibility(View.GONE);
-                warnmingLl.setVisibility(View.VISIBLE);
-                warnmingTv.setText(getString(R.string.str_init_network));
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void showLoading(String msg, String info) {
-        // 加载动画
-        Animation hyperspaceJumpAnimation = AnimationUtils.loadAnimation(
-                this, R.anim.anim_loading);
-        image.setImageResource(R.drawable.animation);
-        // 使用ImageView显示动画
-        image.startAnimation(hyperspaceJumpAnimation);
-        tipsMsgTv.setText(msg);
-        tipsInfoTv.setText(info);
     }
 }

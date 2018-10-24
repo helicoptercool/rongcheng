@@ -6,13 +6,6 @@ package com.bsit.pboard.model;
  * @author dell
  */
 public class MessageQueryRes {
-
-//    private String deviceId; // 机具编号                                                 12位
-//    private String reloadAmount; // 订单圈存金额 ,     16进制       8位
-//    private String rechargeId; // 补登流水号                                           16位
-//    private String respondeCode; // 响应码（09000成功，其他失败）  5位
-
-
     private String tradetype; //01 IC卡充值,02月票充值
     private String money; //充值金额
     private String startdate; //本次充值起始日期

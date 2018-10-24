@@ -233,7 +233,6 @@ public class CardBusiness {
         if (TextUtils.isEmpty(response) || !response.endsWith("9000")) {
             response = (ByteUtil.appendLengthForMessage(Long.toHexString(Long.parseLong(reloadAmount) + ByteUtil.pasInt(cardInfo.getBalance())), 8)) + response;
         }
-
         cardInfo.setBalance(response.substring(0, 8));
         return cardInfo;
     }
