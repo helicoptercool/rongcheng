@@ -9,22 +9,22 @@ package com.bsit.pboard.model;
 public class MessageApplyWriteRes {
 
 //	private String messageDateTime; // 时间戳                                    	 14位
-	private String MAC2; 			// 圈存mac2                8位
-	private String cardID;
+	private String mac2; 			// 圈存mac2                8位
+	private String cardNo;
 
 	public String getMAC2() {
-		return MAC2;
+		return mac2;
 	}
 
 	public void setMAC2(String MAC2) {
-		this.MAC2 = MAC2;
+		this.mac2 = MAC2;
 	}
 
-	public String getCardID() {
-		return cardID;
+	public String getCardNo() {
+		return cardNo;
 	}
 
-	public void setCardID(String cardID) {
-		this.cardID = cardID;
+	public void setCardNo(String cardNo) {
+		this.cardNo = cardNo;
 	}
 }

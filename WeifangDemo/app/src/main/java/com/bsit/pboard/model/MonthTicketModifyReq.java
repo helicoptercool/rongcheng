@@ -10,8 +10,9 @@ public class MonthTicketModifyReq {
 	private String data0015;
 	private String ats;
 	private String termTradeNo;
+	private String messageDateTime;
 
-	public MonthTicketModifyReq(String termId, String cardId, String outTradeNo, String cardType, String data0015, String ats, String termTradeNo) {
+	public MonthTicketModifyReq(String termId, String cardId, String outTradeNo, String cardType, String data0015, String ats, String termTradeNo, String messageDateTime) {
 		this.termId = termId;
 		this.cardId = cardId;
 		this.outTradeNo = outTradeNo;
@@ -19,6 +20,7 @@ public class MonthTicketModifyReq {
 		this.data0015 = data0015;
 		this.ats = ats;
 		this.termTradeNo = termTradeNo;
+		this.messageDateTime = messageDateTime;
 	}
 
 	public String getTermId() {
@@ -75,5 +77,13 @@ public class MonthTicketModifyReq {
 
 	public void setTermTradeNo(String termTradeNo) {
 		this.termTradeNo = termTradeNo;
+	}
+
+	public String getMessageDateTime() {
+		return messageDateTime;
+	}
+
+	public void setMessageDateTime(String messageDateTime) {
+		this.messageDateTime = messageDateTime;
 	}
 }

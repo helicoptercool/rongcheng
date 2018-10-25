@@ -68,7 +68,6 @@ class RequestUtil {
             @Override
             public void run() {
                 RealResponse response = new RealRequest().postData(url, getPostBody(paramsMap, jsonStr), getPostBodyType(paramsMap, jsonStr), headerMap);
-                Log.i("post", "post response = " + response.toString());
                 if (response.code == HttpURLConnection.HTTP_OK) {
                     callBack.onSeccess(response);
                 } else {

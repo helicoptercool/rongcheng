@@ -49,7 +49,7 @@ public class HttpBusiness {
     public final static int START_RECHARGECARD_EROOR_CODE = -101;
     public final static int CONFIRM_RECHARGE_SUCEESS_CODE = 102;
     public final static int CONFIRM_RECHARGE_EROOR_CODE = -102;
-    public final static int HEART_BEAT_SUCEESS_CODE = 103;
+//    public final static int HEART_BEAT_SUCEESS_CODE = 103;
     public final static int CONFIRM_RECHARGE_MONTH_SUCEESS_CODE = 104;
     public final static int CONFIRM_RECHARGE_MONTH_EROOR_CODE = -104;
     public final static int SIGN_IN_SUCEESS_CODE = 105;
@@ -196,6 +196,7 @@ public class HttpBusiness {
         paramsMap.put("data0015", monthTicketReq.getData0015());
         paramsMap.put("ats", monthTicketReq.getAts());
         paramsMap.put("termTradeNo", monthTicketReq.getTermTradeNo());
+        paramsMap.put("messageDateTime", monthTicketReq.getMessageDateTime());
 
         UrlHttpUtil.post(Constants.URL_MONTY_TICKET_UPDATE, paramsMap, new CallBackUtil.CallBackString() {
             @Override
@@ -245,6 +246,7 @@ public class HttpBusiness {
         paramsMap.put("cardType", messageConfirmReq.getCardType());
         paramsMap.put("status", messageConfirmReq.getStatus());
         paramsMap.put("tac", messageConfirmReq.getTac());
+        paramsMap.put("messageDateTime", messageConfirmReq.getMessageDateTime());
         UrlHttpUtil.post(Constants.URL_RECHARGE_CONFIRM, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
@@ -280,7 +282,7 @@ public class HttpBusiness {
      * @param hardWorkVer
      * @param handler
      */
-    public static void heartBeat(String equId, final String cityCode, String binVer, String hardWorkVer, final Handler handler) {
+    /*public static void heartBeat(String equId, final String cityCode, String binVer, String hardWorkVer, final Handler handler) {
         if (!isNetworkAvailable(context)) {
             Message msg = handler.obtainMessage();
             msg.what = ERROR_CODE;
@@ -312,7 +314,7 @@ public class HttpBusiness {
                 }
             }
         });
-    }
+    }*/
 
 
     /**

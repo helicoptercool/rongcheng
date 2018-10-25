@@ -74,4 +74,12 @@ public class MessageConfirmReq {
 	public void setTac(String tac) {
 		this.tac = tac;
 	}
+
+	public String getMessageDateTime() {
+		return messageDateTime;
+	}
+
+	public void setMessageDateTime(String messageDateTime) {
+		this.messageDateTime = messageDateTime;
+	}
 }

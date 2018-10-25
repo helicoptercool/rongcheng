@@ -22,10 +22,12 @@ public class CardOperator {
     private CardInfo mCardInfo;
     private int mCardType;
     private String cpuCardType = "052";
+    private CardBusiness mCardBusiness;
 
     public CardOperator(Context context, Handler handler) {
         mContext = context;
         mHandler = handler;
+        mCardBusiness = CardBusiness.getInstance(mContext);
     }
 
     public void signIn() {
@@ -35,44 +37,39 @@ public class CardOperator {
     public void findCard() {
         int cardTransport = 200;//交通部
         try {
-            String cardSn = CardBusiness.findCard();
+            String cardSn = mCardBusiness.findCard();
             if (!TextUtils.isEmpty(cardSn)) {
                 if (mCardType == cardTransport) {
-                    mCardInfo = CardBusiness.readOtherCard();
+                    mCardInfo = mCardBusiness.readOtherCard();
                 } else {
-                    mCardInfo = CardBusiness.getCardInfo();
+                    mCardInfo = mCardBusiness.getCardInfo();
                 }
                 Log.i(TAG, "card info = " + mCardInfo.toString());
-
-//                        String data0015 = cardBusiness.getData0015();
-//                        Log.i(TAG, "data0015 === " + data0015);
-
-
                 HttpBusiness.queryOrder(new MessageQueryReq(MacUtils.getMac(), HttpBusiness.getTime(), mCardInfo.getCardNo(), mCardInfo.getBalance()), mHandler);
-//                        cardBusiness.getTopInitInfo(cardInfo, "8888", deviceId);
                 if (mCardInfo.getIsUse()) {
                     Message message = mHandler.obtainMessage();
-                    message.what = ConstantMsg.SHOW_CARD_MSG_WHAT;
+                    message.what = ConstantMsg.VIEW_SHOW_CARD;
                     message.obj = mCardInfo;
                     mHandler.sendMessage(message);
                 } else {
-                    mHandler.sendEmptyMessage(ConstantMsg.NOT_USE_MSG_WHAT);
+                    mHandler.sendEmptyMessage(ConstantMsg.VIEW_CARD_NOT_USE);
                 }
             }
         } catch (final CardBusiness.FindCardException e) {
             mCardInfo = null;
-            mHandler.sendEmptyMessageDelayed(ConstantMsg.FIND_CARD_MSG_WHAT, 1000);
+            mHandler.sendEmptyMessageDelayed(ConstantMsg.MSG_FIND_CARD, ConstantMsg.TIME_INTEVAL);
         } catch (final CardBusiness.ReadCardException e) {
             mCardInfo = null;
             if (e.getMessage().equals(mContext.getString(R.string.str_get_main_dir_failure))) {
-                mHandler.sendEmptyMessage(ConstantMsg.UNRECOGNIZE_CARD);
+                mHandler.sendEmptyMessage(ConstantMsg.VIEW_UNRECOGNIZE_CARD);
+                return;
             }
             if (mCardType == cardTransport) {
                 mCardType = 100;//住建部
             } else {
                 mCardType = cardTransport;
             }
-            mHandler.sendEmptyMessageDelayed(ConstantMsg.FIND_CARD_MSG_WHAT, 1000);
+            mHandler.sendEmptyMessageDelayed(ConstantMsg.MSG_FIND_CARD, ConstantMsg.TIME_INTEVAL);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,24 +77,24 @@ public class CardOperator {
 
     public void rechargeInit(String tradeType,String money, String deviceID,String outTradeNo) {
         try {
-            mCardInfo = CardBusiness.getTopInitInfo(mCardInfo, money, deviceID);
+            mCardInfo = mCardBusiness.getTopInitInfo(mCardInfo, money, deviceID);
 //            MessageQueryRes messageQueryRes = mRechargeInitParm.getMessageQueryRes();
             if (tradeType.equals("01")) { //01 IC卡充值
                 HttpBusiness.rechargeCard(new MessageApplyWriteReq(MacUtils.getMac(), mCardInfo.getCardNo(), cpuCardType, tradeType,
                         outTradeNo, mCardInfo.getCardRand(), mCardInfo.getCardTradeNo(), mCardInfo.getBalance(), money,
-                        mCardInfo.getQcMac(), "", "", HttpBusiness.getTime()), mHandler);
+                        mCardInfo.getQcMac(), "", "", HttpBusiness.getDealStamp()), mHandler);
             } else if (tradeType.equals("02")) { //02月票充值
-                String data0015 = CardBusiness.getData0015();
+                String data0015 = mCardBusiness.getData0015();
                 String ats = "";
                 if (data0015.length() > 16) {
                     ats = data0015.substring(data0015.length() - 8, data0015.length());
                 }
-                HttpBusiness.monthTicketModify(new MonthTicketModifyReq(MacUtils.getMac(), mCardInfo.getCardNo(), outTradeNo, cpuCardType, data0015, ats, mCardInfo.getCardRand()), mHandler);
+                HttpBusiness.monthTicketModify(new MonthTicketModifyReq(MacUtils.getMac(), mCardInfo.getCardNo(), outTradeNo, cpuCardType, data0015, ats, mCardInfo.getCardRand(),HttpBusiness.getDealStamp()), mHandler);
 //                        httpBusiness.rechargeCard(new MessageApplyWriteReq(MacUtils.getMac(), cardInfo.getCardNo(), cardType, messageQueryRes.getTradetype(),
 //                                messageQueryRes.getOutTradeNo(), cardInfo.getCardRand(), cardInfo.getCardSeq(), cardInfo.getBalance(), messageQueryRes.getMoney(), cardInfo.getQcMac(), "", "", HttpBusiness.getTime()), handler);
             }
         } catch (Exception e) {
-            mHandler.sendEmptyMessage(ConstantMsg.SHOW_FAILDRECHARGE_MSG_WHAT);
+            mHandler.sendEmptyMessage(ConstantMsg.MSG_FAIL_RECHARGE);
         }
     }
 
@@ -105,7 +102,7 @@ public class CardOperator {
         try {
             HttpBusiness.confirmRecharge(new MessageConfirmReq(MacUtils.getMac(), mCardInfo.getCardNo(), outTradeNo, cpuCardType, writeCardStatus, mCardInfo.getTac(),HttpBusiness.getDealStamp()), mHandler);
         } catch (Exception e) {
-            mHandler.sendEmptyMessage(ConstantMsg.SHOW_FAILDRECHARGE_MSG_WHAT);
+            mHandler.sendEmptyMessage(ConstantMsg.MSG_FAIL_RECHARGE_CONFIRM);
         }
     }
 
