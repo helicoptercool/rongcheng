@@ -14,15 +14,17 @@ public class MessageConfirmReq {
 	private String cardType; //卡类型052 CPU卡，952 M1卡
 	private String status; //写卡结果 00成功  01失败
 	private String tac; //写卡返回tac
+	private String messageDateTime;
 
 
-	public MessageConfirmReq(String termId, String cardId, String outTradeNo, String cardType, String status, String tac) {
+	public MessageConfirmReq(String termId, String cardId, String outTradeNo, String cardType, String status, String tac, String messageDateTime) {
 		this.termId = termId;
 		this.cardId = cardId;
 		this.outTradeNo = outTradeNo;
 		this.cardType = cardType;
 		this.status = status;
 		this.tac = tac;
+		this.messageDateTime = messageDateTime;
 	}
 
 	public String getTermId() {

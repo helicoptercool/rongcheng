@@ -16,7 +16,8 @@ public class CardInfo implements Serializable {
     private String fciData;   //发卡机构自定义FCI数据
     private String balance;   //余额
     private String cardSeq;   //计数器
-    private String keyVer;    //密钥版本
+    private String cardTradeNo;    //交易序号
+    private String keyVer;    //密钥版本号
     private String alglnd;    //算法标识
     private String cardRand;  //随机数
     private String qcMac;
@@ -115,12 +116,12 @@ public class CardInfo implements Serializable {
         this.cardSeq = cardSeq;
     }
 
-    public String getKeyVer() {
-        return keyVer;
+    public String getCardTradeNo() {
+        return cardTradeNo;
     }
 
-    public void setKeyVer(String keyVer) {
-        this.keyVer = keyVer;
+    public void setCardTradeNo(String cardTradeNo) {
+        this.cardTradeNo = cardTradeNo;
     }
 
     public String getAlglnd() {
@@ -155,6 +156,14 @@ public class CardInfo implements Serializable {
         this.messageDateTime = messageDateTime;
     }
 
+    public String getKeyVer() {
+        return keyVer;
+    }
+
+    public void setKeyVer(String keyVer) {
+        this.keyVer = keyVer;
+    }
+
     public String getCardSType() {
         return cardSType;
     }
@@ -183,7 +192,7 @@ public class CardInfo implements Serializable {
                 ", fciData='" + fciData + '\'' +
                 ", balance='" + balance + '\'' +
                 ", cardSeq='" + cardSeq + '\'' +
-                ", keyVer='" + keyVer + '\'' +
+                ", cardTradeNo='" + cardTradeNo + '\'' +
                 ", alglnd='" + alglnd + '\'' +
                 ", cardRand='" + cardRand + '\'' +
                 ", qcMac='" + qcMac + '\'' +

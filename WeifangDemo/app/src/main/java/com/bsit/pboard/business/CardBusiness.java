@@ -182,7 +182,6 @@ public class CardBusiness {
         //pin check
 //        String checkRsp = sendApdu(ByteUtil.hexStr("6F0800000001000000000020000003123456"), 18);
         String checkRsp = sendApdu(makeCmd("0020000003123456"), 18);
-        Log.i("pin pin", "ppppppiiiiiiiiinnnnnn response = " + checkRsp);
 //        String initTopMsg = "6F110000000100000000805000020B01" + ByteUtil.appendLengthForMessage(Long.toHexString(Long.parseLong(reloadBal)), 8) + deviceId + "10";
         String initTopMsg = "6F110000000100000000805000020B01" + ByteUtil.appendLengthForMessage(Long.toHexString(Long.parseLong(reloadBal)), 8) + deviceId + "10";
         String response = sendApdu(ByteUtil.hexStr(initTopMsg), 27);
@@ -190,22 +189,8 @@ public class CardBusiness {
         if (TextUtils.isEmpty(response) || !response.endsWith("9000")) {
             throw new Exception("圈存初始化失败:" + response);
         }
-        /*CircleDepositInitRes cdInit = new CircleDepositInitRes();
-        String oldBalance = response.substring(0,8);
-        String transactSn = response.substring(8,12);
-        String secretKeyV = response.substring(12,14);
-        String alogrithId = response.substring(14,16);
-        String prandomNum = response.substring(16,24);
-        String macOne = response.substring(24,32);
 
-        cdInit.setmOldBalance(oldBalance);
-        cdInit.setmTransactSn(transactSn);
-        cdInit.setmSecretKeyVer(secretKeyV);
-        cdInit.setmAlgorithId(alogrithId);
-        cdInit.setmPseudorandomNumber(prandomNum);
-        cdInit.setmMacOne(macOne);*/
-
-        mCardInfo.setCardSeq(response.substring(8, 12));
+        mCardInfo.setCardTradeNo(response.substring(8, 12));
         mCardInfo.setKeyVer(response.substring(12, 14));
         mCardInfo.setAlglnd(response.substring(14, 16));
         mCardInfo.setCardRand(response.substring(16, 24));

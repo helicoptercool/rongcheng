@@ -26,8 +26,6 @@ import com.bsit.pboard.model.MessageApplyWriteRes;
 import com.bsit.pboard.model.MessageQueryRes;
 import com.bsit.pboard.model.MonthTicketModifyRes;
 import com.bsit.pboard.model.Rda;
-import com.bsit.pboard.model.RechargeConfirmParm;
-import com.bsit.pboard.model.RechargeInitParm;
 import com.bsit.pboard.utils.ByteUtil;
 import com.bsit.pboard.utils.CardOperator;
 import com.bsit.pboard.utils.ConstantMsg;
@@ -39,6 +37,8 @@ import com.bsit.pboard.utils.UpdateUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+
+import static com.bsit.pboard.model.Constants.DEVICE_ID;
 
 
 public class MainActivity extends Activity {
@@ -161,37 +161,10 @@ public class MainActivity extends Activity {
     /**
      * 圈存初始化
      */
-    private void topInit(String tradeType, String money) {
+    private void topInit() {
         //"tradetype":"01","money":"100","startdate":"","enddate":"","datedif":"","outTradeNo":"201810231006261865"
-        tradeType = "01";
-        money = "100";
-        RechargeInitParm parm = new RechargeInitParm(tradeType, money, MacUtils.getMac(), messageQueryRes);
-        mCdOperator.rechargeInit(parm);
+        mCdOperator.rechargeInit(messageQueryRes.getTradetype(), messageQueryRes.getMoney(), DEVICE_ID, messageQueryRes.getOutTradeNo());
     }
-
-    /**
-     * 圈存
-     *
-     */
-    /*private void topRecharge(final String mac2, final String messageDateTime) {
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    cardInfo = cardBusiness.getTacFormTopUp(messageDateTime + mac2, cardInfo, reloadAmount);
-                    String writeFlag = TextUtils.isEmpty(cardInfo.getTac()) ? "01" : "00";
-                    Log.e("MAIN", "圈存结果：" + writeFlag);
-                    httpBusiness.confirmRecharge(new MessageConfirmReq(MacUtils.getMac(), cardInfo.getCardSeq(), mOutTradeNo, cpuCardType, mWriteCardStatus, cardInfo.getTac()), handler);
-                } catch (Exception e) {
-                    rechargeResult = false;
-                    erroeCode = e.getMessage();
-                    Log.e("MAIN", "圈存错误：" + erroeCode);
-                    handler.sendEmptyMessage(ConstantMsg.SHOW_FAILDRECHARGE_MSG_WHAT);
-                }
-            }
-        }.start();
-    }*/
 
     /**
      * 圈存
@@ -202,7 +175,7 @@ public class MainActivity extends Activity {
             String writeFlag = TextUtils.isEmpty(cardInfo.getTac()) ? "01" : "00";
             Log.e("MAIN", "圈存结果：" + writeFlag);
             mCdOperator.setCardInfo(cardInfo);
-            mCdOperator.rechargeConfirm(new RechargeConfirmParm(mOutTradeNo, writeFlag));
+            mCdOperator.rechargeConfirm(mOutTradeNo, writeFlag);
 //            httpBusiness.confirmRecharge(new MessageConfirmReq(MacUtils.getMac(), cardInfo.getCardSeq(), mOutTradeNo, cpuCardType, mWriteCardStatus, cardInfo.getTac()), handler);
         } catch (Exception e) {
             rechargeResult = false;
@@ -211,7 +184,6 @@ public class MainActivity extends Activity {
             handler.sendEmptyMessage(ConstantMsg.SHOW_FAILDRECHARGE_MSG_WHAT);
         }
     }
-
 
     @Override
     protected void onPause() {
@@ -380,7 +352,7 @@ public class MainActivity extends Activity {
                     changeViewByType(3);
                     reloadAmount = messageQueryRes.getMoney();
                     mOutTradeNo = messageQueryRes.getOutTradeNo();
-                    topInit(messageQueryRes.getTradetype(), messageQueryRes.getMoney());
+                    topInit();
                     break;
                 case HttpBusiness.START_RECHARGECARD_SUCEESS_CODE:
                     MessageApplyWriteRes messageApplyWriteRes = (MessageApplyWriteRes) msg.obj;
@@ -428,7 +400,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    /* 开始PhoneState听众 */
+    /* 开始PhoneState */
     private class MyPhoneStateListener extends PhoneStateListener {
         /* 从得到的信号强度,每个tiome供应商有更新 */
         @Override
