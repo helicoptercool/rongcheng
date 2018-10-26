@@ -6,6 +6,7 @@ public class ConstantMsg {
     public final static int MSG_FAIL_READ_CARD = 12;
     public final static int MSG_FAIL_RECHARGE = 13;
     public final static int MSG_FAIL_RECHARGE_CONFIRM = 14;
+    public final static int MSG_HAS_RECHERGED = 15;
 
     public static final int VIEW_STICK_CARD = 0;
     public static final int VIEW_INVALID_CARD = 1;
@@ -18,5 +19,6 @@ public class ConstantMsg {
     public static final int VIEW_INIT_NETWORK = 8;
     public static final int VIEW_UNRECOGNIZE_CARD = 9;
 
-    public static final int TIME_INTEVAL = 1000;
+    public static final int TIME_INTEVAL_ONE_SECOND = 1000;
+    public static final int TIME_INTEVAL_THREE_SECOND = 3000;
 }

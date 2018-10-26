@@ -19,6 +19,8 @@ import com.bsit.pboard.model.MessageQueryRes;
 import com.bsit.pboard.model.MonthTicketModifyReq;
 import com.bsit.pboard.model.MonthTicketModifyRes;
 import com.bsit.pboard.model.Rda;
+import com.bsit.pboard.model.TestRechargeInit;
+import com.bsit.pboard.model.TestResult;
 import com.bsit.pboard.utils.MacUtils;
 import com.bsit.pboard.utils.ToastUtils;
 import com.google.gson.Gson;
@@ -49,11 +51,14 @@ public class HttpBusiness {
     public final static int START_RECHARGECARD_EROOR_CODE = -101;
     public final static int CONFIRM_RECHARGE_SUCEESS_CODE = 102;
     public final static int CONFIRM_RECHARGE_EROOR_CODE = -102;
-//    public final static int HEART_BEAT_SUCEESS_CODE = 103;
+    //    public final static int HEART_BEAT_SUCEESS_CODE = 103;
     public final static int CONFIRM_RECHARGE_MONTH_SUCEESS_CODE = 104;
     public final static int CONFIRM_RECHARGE_MONTH_EROOR_CODE = -104;
     public final static int SIGN_IN_SUCEESS_CODE = 105;
     public final static int SIGN_IN_EROOR_CODE = -105;
+
+    public static final int TEST_OK = 10000;
+    public static final int TEST_ERROR = 20000;
 
     private HttpBusiness(Context context) {
         this.context = context;
@@ -174,6 +179,55 @@ public class HttpBusiness {
     }
 
 
+    public static void testRechargeCard(TestRechargeInit messageApplyWriteReq, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
+            Message msg = handler.obtainMessage();
+            msg.what = ERROR_CODE;
+            msg.obj = "设备无网络";
+            handler.sendMessage(msg);
+            return;
+        }
+        HashMap<String, String> paramsMap = new HashMap<String, String>();
+        paramsMap.put("algInd", messageApplyWriteReq.getAlgInd());
+        paramsMap.put("cardBalance", messageApplyWriteReq.getCardBalance());
+        paramsMap.put("keyVer", messageApplyWriteReq.getKeyVer());
+        paramsMap.put("randPBOC", messageApplyWriteReq.getRandPBOC());
+        paramsMap.put("sequence", messageApplyWriteReq.getSequence());
+        paramsMap.put("mac1", messageApplyWriteReq.getMac1());
+        paramsMap.put("amount", messageApplyWriteReq.getAmount());
+        paramsMap.put("cardNo", "10001000000000000001");
+        paramsMap.put("termNo", messageApplyWriteReq.getTermNo());
+        paramsMap.put("transTime", messageApplyWriteReq.getTransTime());
+        Log.i(TAG, "test get mac2 " + messageApplyWriteReq.toString());
+        UrlHttpUtil.get(Constants.TEST_GET_MAC2, paramsMap, new CallBackUtil.CallBackString() {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+                Log.i(TAG, "rechargeCard failure = " + errorMessage);
+                Message msg = handler.obtainMessage();
+                msg.what = TEST_ERROR;
+                msg.obj = errorMessage;
+                handler.sendMessage(msg);
+            }
+
+            @Override
+            public void onResponse(String response) {
+                Log.i(TAG, "rechargeCard response = " + response);
+                Message msg = handler.obtainMessage();
+                TestResult backInfoObject = gson.fromJson(response, new TypeToken<TestResult>() {
+                }.getType());
+                if (backInfoObject.getCode() != null && backInfoObject.getCode().equals("00000")) {
+                    msg.what = TEST_OK;
+                    msg.obj = backInfoObject.getContent();
+                } else {
+                    msg.what = TEST_ERROR;
+                    msg.obj = backInfoObject.getContent();
+                }
+                handler.sendMessage(msg);
+            }
+        });
+    }
+
+
     /**
      * CPU卡补登月票有效期修改（月票才需）
      *
@@ -201,6 +255,7 @@ public class HttpBusiness {
         UrlHttpUtil.post(Constants.URL_MONTY_TICKET_UPDATE, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
+                Log.i(TAG, "error code = " + code + ", errmsg = " + errorMessage);
                 Message msg = handler.obtainMessage();
                 msg.what = ERROR_CODE;
                 msg.obj = errorMessage;
@@ -209,6 +264,7 @@ public class HttpBusiness {
 
             @Override
             public void onResponse(String response) {
+                Log.i(TAG, "monthTicketModify = " + response);
                 Message msg = handler.obtainMessage();
                 BackInfoObject<MonthTicketModifyRes> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<MonthTicketModifyRes>>() {
                 }.getType());

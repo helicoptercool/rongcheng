@@ -36,6 +36,7 @@ class RealRequest {
                 setHeader(conn, headerMap);
             }
             conn.connect();
+            Log.i("GGGGGGGGGGGEETTTT", "requestUrl = " + requestURL);
             return getRealResponse(conn);
         } catch (Exception e) {
             return getExceptonResponse(conn, e);

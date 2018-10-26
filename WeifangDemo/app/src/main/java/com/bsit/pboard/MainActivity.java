@@ -66,11 +66,13 @@ public class MainActivity extends Activity implements CardOperatorListener {
     private String erroeCode;
     private String errorMsg;
     private String mOutTradeNo;
+    private String mLastCardNo;
     private boolean hasSignIn;
     private boolean rechargeResult;
 
     private Handler mHandler;
     private CardOperator mCdOperator;
+    private boolean isRecharge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +108,7 @@ public class MainActivity extends Activity implements CardOperatorListener {
         SimpleDateFormat dff = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dff.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         dateTimeTv.setText(dff.format(new Date()));
-        mHandler.sendEmptyMessageDelayed(ConstantMsg.MSG_UPDATE_TIME, ConstantMsg.TIME_INTEVAL);
+        mHandler.sendEmptyMessageDelayed(ConstantMsg.MSG_UPDATE_TIME, ConstantMsg.TIME_INTEVAL_ONE_SECOND);
     }
 
     private void initLister() {
@@ -140,7 +142,7 @@ public class MainActivity extends Activity implements CardOperatorListener {
     private void netChecker() {
         if (!HttpBusiness.isNetworkAvailable(MainActivity.this)) {
             ShellUtils.execCommand("./etc/ppp/init.quectel-pppd &", true);
-            mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_INIT_NETWORK, ConstantMsg.TIME_INTEVAL);
+            mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_INIT_NETWORK, ConstantMsg.TIME_INTEVAL_ONE_SECOND);
         } else {
             mHandler.removeMessages(ConstantMsg.VIEW_INIT_NETWORK);
             mCdOperator.signIn();
@@ -149,7 +151,8 @@ public class MainActivity extends Activity implements CardOperatorListener {
     }
 
     private void findCard() {
-        mCdOperator.findCard();
+        mCdOperator.findCard(isRecharge);
+//        cardInfo = mCdOperator.testFindCard();
     }
 
     /**
@@ -157,6 +160,12 @@ public class MainActivity extends Activity implements CardOperatorListener {
      */
     private void topInit() {
         mCdOperator.rechargeInit(messageQueryRes.getTradetype(), messageQueryRes.getMoney(), DEVICE_ID, messageQueryRes.getOutTradeNo());
+//        mCdOperator.testRechargeInit("", DEVICE_ID, "");
+    }
+
+
+    private void monthTickeyModify(){
+        mCdOperator.monthTicketModify(messageQueryRes.getOutTradeNo());
     }
 
     /**
@@ -174,8 +183,24 @@ public class MainActivity extends Activity implements CardOperatorListener {
             rechargeResult = false;
             erroeCode = e.getMessage();
             Log.e(TAG, "圈存错误：" + erroeCode);
-            changeViewByType(ConstantMsg.VIEW_CHARGE_END);
-//            mHandler.sendEmptyMessageDelayed(ConstantMsg.MSG_WELCOME, 1000);
+//            changeViewByType(ConstantMsg.VIEW_CHARGE_END);
+        }
+    }
+
+    private void testTopRecharge(final String mac2, final String messageDateTime) {
+        try {
+            Log.i(TAG, "to recharge !! messagedatatime = " + messageDateTime + ", mac2 = " + mac2);
+//            cardInfo = mCardBusiness.getTacFormTopUp(messageDateTime + mac2, cardInfo, reloadAmount);
+            cardInfo = mCardBusiness.testGetTacFormTopUp(messageDateTime + mac2, cardInfo, reloadAmount);
+            String writeFlag = TextUtils.isEmpty(cardInfo.getTac()) ? "01" : "00";
+            Log.e(TAG, "圈存结果：" + writeFlag);
+            mCdOperator.setCardInfo(cardInfo);
+            mCdOperator.rechargeConfirm(mOutTradeNo, writeFlag);
+        } catch (Exception e) {
+            rechargeResult = false;
+            erroeCode = e.getMessage();
+            Log.e(TAG, "圈存错误：" + erroeCode);
+//            changeViewByType(ConstantMsg.VIEW_CHARGE_END);
         }
     }
 
@@ -219,13 +244,15 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 warnmingLl.setVisibility(View.VISIBLE);
                 warnmingTv.setText(getString(R.string.str_useless_card));
                 welcomeLl.setVisibility(View.GONE);
-                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL);
+                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL_ONE_SECOND);
                 break;
             case ConstantMsg.VIEW_NO_ORDER:
                 resultRl.setVisibility(View.GONE);
                 warnmingLl.setVisibility(View.VISIBLE);
-                warnmingTv.setText(getString(R.string.str_not_check_uncharge_order));
+//                warnmingTv.setText(getString(R.string.str_not_check_uncharge_order));
+                warnmingTv.setText(errorMsg);
                 welcomeLl.setVisibility(View.GONE);
+//                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD,ConstantMsg.TIME_INTEVAL_ONE_SECOND);
                 break;
             case ConstantMsg.VIEW_CHARAGING:
                 resultRl.setVisibility(View.VISIBLE);
@@ -240,15 +267,16 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 welcomeLl.setVisibility(View.GONE);
                 if (rechargeResult) {
                     image.setImageResource(R.drawable.icon_budnegchengong);
-                    tipsMsgTv.setText(getResources().getString(R.string.str_recharge_success_balance)+ ByteUtil.toAmountString(ByteUtil.pasInt(cardInfo.getBalance()) / 100.0f));
+                    tipsMsgTv.setText(getResources().getString(R.string.str_recharge_success_balance) + ByteUtil.toAmountString(ByteUtil.pasInt(cardInfo.getBalance()) / 100.0f));
                     tipsInfoTv.setText(getString(R.string.str_please_move_card));
-                    mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL);
                 } else {
                     image.setImageResource(R.drawable.icon_budnegshibai);
                     tipsMsgTv.setText(getResources().getString(R.string.str_error_code) + erroeCode);
-                    tipsInfoTv.setText(getString(R.string.str_recharge_fail_please_retry_stick_card));
-                    mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL);
+//                    tipsInfoTv.setText(getString(R.string.str_recharge_fail_please_retry_stick_card));
+                    tipsInfoTv.setText(errorMsg);
                 }
+                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL_THREE_SECOND);
+                isNeedContinueRecharge(cardInfo.getCardNo());
                 break;
             case ConstantMsg.VIEW_NET_ERROR:
                 if (cardInfo == null) {
@@ -265,7 +293,7 @@ public class MainActivity extends Activity implements CardOperatorListener {
                     warnmingTv.setText(errorMsg);
                     welcomeLl.setVisibility(View.GONE);
                 }
-                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL);
+                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL_ONE_SECOND);
                 break;
             case ConstantMsg.VIEW_SHOW_CARD:
                 welcomeLl.setVisibility(View.GONE);
@@ -282,7 +310,7 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 warnmingLl.setVisibility(View.VISIBLE);
                 warnmingTv.setText(getString(R.string.str_no_permitted_card));
                 welcomeLl.setVisibility(View.GONE);
-                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL);
+                mHandler.sendEmptyMessageDelayed(ConstantMsg.VIEW_STICK_CARD, ConstantMsg.TIME_INTEVAL_ONE_SECOND);
                 break;
             case ConstantMsg.VIEW_INIT_NETWORK:
                 welcomeLl.setVisibility(View.GONE);
@@ -293,6 +321,18 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 break;
             default:
                 break;
+        }
+    }
+
+    private void isNeedContinueRecharge(String cardNo) {
+        if (mLastCardNo == null) {
+            mLastCardNo = cardNo;
+        } else {
+            if (cardNo.equals(mLastCardNo)) {
+                isRecharge = true;
+            } else {
+                isRecharge = false;
+            }
         }
     }
 
@@ -323,12 +363,19 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 changeViewByType(ConstantMsg.VIEW_STICK_CARD);
                 break;
             case HttpBusiness.START_RECHARGECARD_SUCEESS_CODE:
+                if (messageQueryRes.getTradetype().equals("01")){
+
+                }
                 MessageApplyWriteRes messageApplyWriteRes = (MessageApplyWriteRes) response;
                 topRecharge(messageApplyWriteRes.getMAC2(), HttpBusiness.getDealStamp());
+                if (messageQueryRes.getTradetype().equals("02")){
+
+                }
                 break;
             case HttpBusiness.CONFIRM_RECHARGE_MONTH_SUCEESS_CODE:
                 MonthTicketModifyRes monthTicket = (MonthTicketModifyRes) response;
                 String apdu = monthTicket.getApdu();
+                Log.i(TAG, "apdu = " + apdu);
 //                updateMonthTicket();
                 break;
             case HttpBusiness.START_RECHARGECARD_EROOR_CODE:
@@ -347,6 +394,10 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 changeViewByType(ConstantMsg.VIEW_CHARGE_END);
                 break;
             case HttpBusiness.QUERY_ORDER_SUCEESS_CODE:
+
+
+                mHandler.removeMessages(ConstantMsg.MSG_FIND_CARD);
+
                 messageQueryRes = (MessageQueryRes) response;
                 changeViewByType(ConstantMsg.VIEW_CHARAGING);
                 reloadAmount = messageQueryRes.getMoney();
@@ -354,12 +405,14 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 topInit();
                 break;
             case HttpBusiness.QUERY_ORDER_EROOR_CODE:
+                errorMsg = (String) response;
                 changeViewByType(ConstantMsg.VIEW_NO_ORDER);
                 break;
             case ConstantMsg.MSG_FAIL_READ_CARD:
                 changeViewByType(ConstantMsg.VIEW_INVALID_CARD);
                 break;
             case ConstantMsg.MSG_FAIL_RECHARGE:
+                Log.i(TAG, "fail recharg .........");
                 rechargeResult = false;
                 changeViewByType(ConstantMsg.VIEW_CHARGE_END);
                 break;
@@ -383,10 +436,29 @@ public class MainActivity extends Activity implements CardOperatorListener {
                 break;
             case ConstantMsg.VIEW_UNRECOGNIZE_CARD:
                 ToastUtils.showToast(getString(R.string.str_card_not_distinguish), MainActivity.this);
+                changeViewByType(ConstantMsg.VIEW_STICK_CARD);
+                break;
+            case ConstantMsg.MSG_HAS_RECHERGED:
+                changeViewByType(ConstantMsg.VIEW_SHOW_CARD);
                 break;
 //            case HttpBusiness.HEART_BEAT_SUCEESS_CODE:
 //                UpdateUtils.upVersion((Rda) response);
 //                break;
+
+            case HttpBusiness.TEST_ERROR:
+                String error = (String) response;
+                Log.i(TAG, "test error = " + error);
+                break;
+            case HttpBusiness.TEST_OK:
+                String mac2 = (String) response;
+                Log.i(TAG, "test ok = " + mac2);
+//                topRecharge(mac2, HttpBusiness.getDealStamp());
+//                testTopRecharge(mac2,HttpBusiness.getDealStamp());
+                break;
+            case 555:
+                Log.i(TAG, "555 555---");
+//                topInit();
+                break;
             default:
                 break;
         }
