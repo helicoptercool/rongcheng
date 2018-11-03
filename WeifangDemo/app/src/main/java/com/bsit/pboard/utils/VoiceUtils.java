@@ -16,8 +16,8 @@ public class VoiceUtils {
     public static final int GET_BALANCE_SUCCESS = 1;
     public static final int RECHARGE_SUCCESS = 2;
 
-    public VoiceUtils(Context context) {
-        this.mContext = context.getApplicationContext();
+    private VoiceUtils(Context context) {
+        mContext = context;
     }
 
     public static VoiceUtils with(Context context) {
@@ -63,7 +63,6 @@ public class VoiceUtils {
             str = "$" + PlaySound.capitalValueOf(Double.valueOf(String.format("%.2f", Double.parseDouble(stramount))));
         } else if (RECHARGE_SUCCESS == moneyType) {
             str = "*" + PlaySound.capitalValueOf(Double.valueOf(String.format("%.2f", Double.parseDouble(stramount))));
-
         }
         System.out.println("金额的长度 " + str);
         String temp = "";
@@ -94,6 +93,9 @@ public class VoiceUtils {
 //            System.out.println("加载音频失败[" + soundindex + "]");
 
         //播放完成触发此事件
+        if (mediaPlayer == null) {
+            return;
+        }
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
@@ -128,72 +130,50 @@ public class VoiceUtils {
     public MediaPlayer createSound(int soundIndex, String soundString) {
         MediaPlayer mp = null;
         String soundChar = soundString.substring(soundIndex - 1, soundIndex);
-        switch (soundChar) {
-            case "零":
-                mp = MediaPlayer.create(mContext, R.raw.sound0);
-                break;
-            case "壹":
-                mp = MediaPlayer.create(mContext, R.raw.sound1);
-                break;
-            case "贰":
-                mp = MediaPlayer.create(mContext, R.raw.sound2);
-                break;
-            case "叁":
-                mp = MediaPlayer.create(mContext, R.raw.sound3);
-                break;
-            case "肆":
-                mp = MediaPlayer.create(mContext, R.raw.sound4);
-                break;
-            case "伍":
-                mp = MediaPlayer.create(mContext, R.raw.sound5);
-                break;
-            case "陆":
-                mp = MediaPlayer.create(mContext, R.raw.sound6);
-                break;
-            case "柒":
-                mp = MediaPlayer.create(mContext, R.raw.sound7);
-                break;
-            case "捌":
-                mp = MediaPlayer.create(mContext, R.raw.sound8);
-                break;
-            case "玖":
-                mp = MediaPlayer.create(mContext, R.raw.sound9);
-                break;
-            case "拾":
-                mp = MediaPlayer.create(mContext, R.raw.soundshi);
-                break;
-            case "佰":
-                mp = MediaPlayer.create(mContext, R.raw.soundbai);
-                break;
-            case "仟":
-                mp = MediaPlayer.create(mContext, R.raw.soundqian);
-                break;
-            case "角":
-                mp = MediaPlayer.create(mContext, R.raw.soundjiao);
-                break;
-            case "分":
-                mp = MediaPlayer.create(mContext, R.raw.soundfen);
-                break;
-            case "元":
-                mp = MediaPlayer.create(mContext, R.raw.soundyuan);
-                break;
-            case "整":
-                mp = MediaPlayer.create(mContext, R.raw.soundzheng);
-                break;
-            case "万":
-                mp = MediaPlayer.create(mContext, R.raw.soundwan);
-                break;
-            case "$":
-                mp = MediaPlayer.create(mContext, R.raw.card_balance);
-                break;
-            case "*":
-                mp = MediaPlayer.create(mContext, R.raw.recharge_success_balance);
-                break;
-            default:
-                break;
-
+        if (soundChar.equals("零")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound0);
+        } else if (soundChar.equals("壹")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound1);
+        } else if (soundChar.equals("贰")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound2);
+        } else if (soundChar.equals("叁")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound3);
+        } else if (soundChar.equals("肆")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound4);
+        } else if (soundChar.equals("伍")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound5);
+        } else if (soundChar.equals("陆")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound6);
+        } else if (soundChar.equals("柒")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound7);
+        } else if (soundChar.equals("捌")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound8);
+        } else if (soundChar.equals("玖")) {
+            mp = MediaPlayer.create(mContext, R.raw.sound9);
+        } else if (soundChar.equals("拾")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundshi);
+        } else if (soundChar.equals("佰")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundbai);
+        } else if (soundChar.equals("仟")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundqian);
+        } else if (soundChar.equals("角")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundjiao);
+        } else if (soundChar.equals("分")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundfen);
+        } else if (soundChar.equals("元")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundyuan);
+        } else if (soundChar.equals("整")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundzheng);
+        } else if (soundChar.equals("万")) {
+            mp = MediaPlayer.create(mContext, R.raw.soundwan);
+        } else if (soundChar.equals("$")) {
+            mp = MediaPlayer.create(mContext, R.raw.card_balance);
+        } else if (soundChar.equals("*")) {
+            mp = MediaPlayer.create(mContext, R.raw.recharge_success_balance);
         }
-        mp.stop();
+        if (mp != null) {
+            mp.stop();
+        }
         return mp;
     }
 }

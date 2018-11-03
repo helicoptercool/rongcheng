@@ -3,7 +3,7 @@ package com.bsit.pboard.model;
 public class BaseObject<T>  {
 
 	private String code;
-	private String msg;
+	private String message;
 	private T content;
 
 	public String getCode() {
@@ -14,12 +14,12 @@ public class BaseObject<T>  {
 		this.code = code;
 	}
 
-	public String getMsg() {
-		return msg;
+	public String getMessage() {
+		return message;
 	}
 
-	public void setMsg(String msg) {
-		this.msg = msg;
+	public void setMessage(String message) {
+		this.message = message;
 	}
 
 	public T getContent() {

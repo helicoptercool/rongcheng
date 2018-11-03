@@ -3,6 +3,8 @@ package com.bsit.pboard.utils;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import com.bsit.pboard.constant.Constants;
+import com.bsit.pboard.model.HeartBeatRsp;
 import com.bsit.pboard.model.Rda;
 import com.guozheng.urlhttputils.urlhttp.CallBackUtil;
 import com.guozheng.urlhttputils.urlhttp.UrlHttpUtil;
@@ -11,6 +13,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 public class UpdateUtils {
 
@@ -76,6 +81,25 @@ public class UpdateUtils {
         });
     }
 
+
+    public static void upVersion(HeartBeatRsp heartBeatRsp) {
+        UrlHttpUtil.downloadFile(Constants.URL_DOWN_LOAD_FILE, new CallBackUtil.CallBackFile("/sdcard", heartBeatRsp.getBinVer() + ".apk") {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+
+            }
+
+            @Override
+            public void onResponse(File response) {
+                if (response != null) {
+                    installSilently(response.getPath());
+                }
+            }
+        });
+    }
+
+
+
     /**
      * 获取版本号名称
      *
@@ -91,5 +115,14 @@ public class UpdateUtils {
             e.printStackTrace();
         }
         return verName;
+    }
+
+    public static String getTime() {
+        Calendar now = Calendar.getInstance();
+        SimpleDateFormat dff = null;
+        dff = new SimpleDateFormat("yyyyMMddHHmmss");
+        dff.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        String formatted = dff.format(now.getTime());
+        return formatted;
     }
 }

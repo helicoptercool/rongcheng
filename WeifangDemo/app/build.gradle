@@ -39,7 +39,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation files('libs/gson-2.2.4.jar')
-    implementation files('libs/zxing-core-2.2.jar')
 //    compile 'com.tencent.bugly:crashreport:latest.release'
     //其中latest.release指代最新Bugly SDK版本号，也可以指定明确的版本号，例如2.1.9
 //    compile 'com.tencent.bugly:nativecrashreport:latest.release'

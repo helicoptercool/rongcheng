@@ -29,7 +29,7 @@
             android:textColor="@color/white"
             android:layout_centerVertical="true"
             android:layout_toRightOf="@+id/date_time_tv"
-            android:text="sunday"/>
+            android:text="@string/str_sunday"/>
 
         <TextView
             android:id="@+id/right_tv"
@@ -92,7 +92,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16px"
-            android:text=""
+            android:text="@string/str_default"
             android:layout_centerVertical="true"
             android:layout_marginLeft="66px"
             android:textColor="@color/white"/>
@@ -178,13 +178,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:drawableTop="@drawable/icon_kahao"
-                    android:text="卡号"
+                    android:text="@string/str_card_no"
                     />
                 <TextView
                     android:id="@+id/tv_card_no"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1111111111111111111"
+                    android:text="@string/str_default"
                     />
             </LinearLayout>
 
@@ -196,13 +196,13 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:drawableTop="@drawable/icon_yue"
-                    android:text="余额"
+                    android:text="@string/str_balance"
                     />
                 <TextView
                     android:id="@+id/tv_balance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1234"
+                    android:text="@string/str_amount_zero"
                     />
             </LinearLayout>
 

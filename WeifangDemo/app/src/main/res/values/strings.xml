@@ -189,6 +189,7 @@
     <string name="str_device_name">榕城补登设备</string>
     <string name="str_terminal_id">终端ID:</string>
     <string name="str_init_network">正在初始化网络...</string>
+    <string name="str_init_network_ok">网络初始化成功</string>
     <string name="str_no_permitted_card">不允许补登充值的卡</string>
     <string name="str_get_main_dir_failure">选择主目录失败</string>
     <string name="str_get_son_dir_failure">选择子目录失败</string>
@@ -202,4 +203,11 @@
     <string name="str_error_code">错误码：</string>
     <string name="str_recharge_fail_please_retry_stick_card">充值失败 请贴卡重试！</string>
     <string name="str_unknow_error">未知错误</string>
+    <string name="str_has_recharged">已经执行过补登操作</string>
+    <string name="str_recharge_init_failure">圈存初始化失败</string>
+    <string name="str_sunday">sunday</string>
+    <string name="str_default"></string>
+    <string name="str_card_no">卡号</string>
+    <string name="str_balance">余额</string>
+    <string name="str_amount_zero">0</string>
 </resources>

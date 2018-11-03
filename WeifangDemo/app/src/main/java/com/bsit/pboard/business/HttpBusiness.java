@@ -2,27 +2,29 @@ package com.bsit.pboard.business;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
 import com.bsit.pboard.model.BackInfoObject;
 import com.bsit.pboard.model.BaseObject;
-import com.bsit.pboard.model.Constants;
+import com.bsit.pboard.constant.Constants;
+import com.bsit.pboard.model.HeartBeatReq;
+import com.bsit.pboard.model.HeartBeatRsp;
 import com.bsit.pboard.model.MessageApplyWriteReq;
 import com.bsit.pboard.model.MessageApplyWriteRes;
 import com.bsit.pboard.model.MessageConfirmReq;
-import com.bsit.pboard.model.MessageConfirmRes;
 import com.bsit.pboard.model.MessageQueryReq;
 import com.bsit.pboard.model.MessageQueryRes;
 import com.bsit.pboard.model.MonthTicketModifyReq;
 import com.bsit.pboard.model.MonthTicketModifyRes;
-import com.bsit.pboard.model.Rda;
-import com.bsit.pboard.model.TestRechargeInit;
-import com.bsit.pboard.model.TestResult;
+import com.bsit.pboard.model.YearCheckApplyReq;
+import com.bsit.pboard.model.YearCheckApplyRsp;
+import com.bsit.pboard.model.YearCheckNoticeReq;
+import com.bsit.pboard.model.YearCheckQueryReq;
+import com.bsit.pboard.model.YearCheckQueryRsp;
+import com.bsit.pboard.utils.EncryptUtils;
 import com.bsit.pboard.utils.MacUtils;
-import com.bsit.pboard.utils.ToastUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.guozheng.urlhttputils.urlhttp.CallBackUtil;
@@ -32,7 +34,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
 
@@ -51,14 +52,18 @@ public class HttpBusiness {
     public final static int START_RECHARGECARD_EROOR_CODE = -101;
     public final static int CONFIRM_RECHARGE_SUCEESS_CODE = 102;
     public final static int CONFIRM_RECHARGE_EROOR_CODE = -102;
-    //    public final static int HEART_BEAT_SUCEESS_CODE = 103;
+    public final static int HEART_BEAT_REQUEST = -103;
+    public final static int HEART_BEAT_SUCEESS_CODE = 103;
     public final static int CONFIRM_RECHARGE_MONTH_SUCEESS_CODE = 104;
     public final static int CONFIRM_RECHARGE_MONTH_EROOR_CODE = -104;
     public final static int SIGN_IN_SUCEESS_CODE = 105;
     public final static int SIGN_IN_EROOR_CODE = -105;
-
-    public static final int TEST_OK = 10000;
-    public static final int TEST_ERROR = 20000;
+    public final static int YEAR_CHECK_QUERY_SUCCESS = 106;
+    public final static int YEAR_CHECK_QUERY_FAILURE = -106;
+    public final static int YEAR_CHECK_APPLY_SUCCESS = 107;
+    public final static int YEAR_CHECK_APPLY_FAILURE = -107;
+    public final static int YEAR_CHECK_NOTICE_SUCCESS = 108;
+    public final static int YEAR_CHECK_NOTICE_FAILURE = -108;
 
     private HttpBusiness(Context context) {
         this.context = context;
@@ -120,7 +125,6 @@ public class HttpBusiness {
         });
     }
 
-
     /**
      * 补登圈存
      *
@@ -177,56 +181,6 @@ public class HttpBusiness {
             }
         });
     }
-
-
-    public static void testRechargeCard(TestRechargeInit messageApplyWriteReq, final Handler handler) {
-        if (!isNetworkAvailable(context)) {
-            Message msg = handler.obtainMessage();
-            msg.what = ERROR_CODE;
-            msg.obj = "设备无网络";
-            handler.sendMessage(msg);
-            return;
-        }
-        HashMap<String, String> paramsMap = new HashMap<String, String>();
-        paramsMap.put("algInd", messageApplyWriteReq.getAlgInd());
-        paramsMap.put("cardBalance", messageApplyWriteReq.getCardBalance());
-        paramsMap.put("keyVer", messageApplyWriteReq.getKeyVer());
-        paramsMap.put("randPBOC", messageApplyWriteReq.getRandPBOC());
-        paramsMap.put("sequence", messageApplyWriteReq.getSequence());
-        paramsMap.put("mac1", messageApplyWriteReq.getMac1());
-        paramsMap.put("amount", messageApplyWriteReq.getAmount());
-        paramsMap.put("cardNo", "10001000000000000001");
-        paramsMap.put("termNo", messageApplyWriteReq.getTermNo());
-        paramsMap.put("transTime", messageApplyWriteReq.getTransTime());
-        Log.i(TAG, "test get mac2 " + messageApplyWriteReq.toString());
-        UrlHttpUtil.get(Constants.TEST_GET_MAC2, paramsMap, new CallBackUtil.CallBackString() {
-            @Override
-            public void onFailure(int code, String errorMessage) {
-                Log.i(TAG, "rechargeCard failure = " + errorMessage);
-                Message msg = handler.obtainMessage();
-                msg.what = TEST_ERROR;
-                msg.obj = errorMessage;
-                handler.sendMessage(msg);
-            }
-
-            @Override
-            public void onResponse(String response) {
-                Log.i(TAG, "rechargeCard response = " + response);
-                Message msg = handler.obtainMessage();
-                TestResult backInfoObject = gson.fromJson(response, new TypeToken<TestResult>() {
-                }.getType());
-                if (backInfoObject.getCode() != null && backInfoObject.getCode().equals("00000")) {
-                    msg.what = TEST_OK;
-                    msg.obj = backInfoObject.getContent();
-                } else {
-                    msg.what = TEST_ERROR;
-                    msg.obj = backInfoObject.getContent();
-                }
-                handler.sendMessage(msg);
-            }
-        });
-    }
-
 
     /**
      * CPU卡补登月票有效期修改（月票才需）
@@ -330,6 +284,196 @@ public class HttpBusiness {
     }
 
     /**
+     * 年检查询
+     *
+     * @param req
+     * @param handler
+     */
+    public static void queryYearCheck(YearCheckQueryReq req, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
+            Message msg = handler.obtainMessage();
+            msg.what = ERROR_CODE;
+            msg.obj = "设备无网络";
+            handler.sendMessage(msg);
+            return;
+        }
+        HashMap<String, String> paramsMap = new HashMap<String, String>();
+        paramsMap.put("termId", req.getTermId());
+        paramsMap.put("cardId", req.getCardId());
+        UrlHttpUtil.post(Constants.URL_QUERY_YEAR_CHECK, paramsMap, new CallBackUtil.CallBackString() {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+                Message msg = handler.obtainMessage();
+                msg.what = ERROR_CODE;
+                msg.obj = errorMessage;
+                handler.sendMessage(msg);
+            }
+
+            @Override
+            public void onResponse(String response) {
+                Log.i(TAG, "queryYearCheck = " + response);
+                Message msg = handler.obtainMessage();
+                BackInfoObject<YearCheckQueryRsp> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<YearCheckQueryRsp>>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
+                    msg.what = YEAR_CHECK_QUERY_SUCCESS;
+                    msg.obj = backInfoObject.getObj();
+                } else {
+                    msg.what = YEAR_CHECK_QUERY_FAILURE;
+                    msg.obj = backInfoObject.getStatus();
+                }
+                handler.sendMessage(msg);
+            }
+        });
+    }
+
+    /**
+     * 年检请求
+     *
+     * @param req
+     * @param handler
+     */
+    public static void applyYearCheck(YearCheckApplyReq req, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
+            Message msg = handler.obtainMessage();
+            msg.what = ERROR_CODE;
+            msg.obj = "设备无网络";
+            handler.sendMessage(msg);
+            return;
+        }
+        HashMap<String, String> paramsMap = new HashMap<String, String>();
+        paramsMap.put("termId", req.getTermId());
+        paramsMap.put("cardId", req.getCardId());
+        paramsMap.put("ats", req.getAts());
+        paramsMap.put("random", req.getRandom());
+        UrlHttpUtil.post(Constants.URL_APPLY_YEAR_CHECK, paramsMap, new CallBackUtil.CallBackString() {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+                Message msg = handler.obtainMessage();
+                msg.what = ERROR_CODE;
+                msg.obj = errorMessage;
+                handler.sendMessage(msg);
+            }
+
+            @Override
+            public void onResponse(String response) {
+                Log.i(TAG, "applyYearCheck = " + response);
+                Message msg = handler.obtainMessage();
+                BackInfoObject<YearCheckApplyRsp> backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject<YearCheckApplyRsp>>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
+                    msg.what = YEAR_CHECK_APPLY_SUCCESS;
+                    msg.obj = backInfoObject.getObj();
+                } else {
+                    msg.what = YEAR_CHECK_APPLY_FAILURE;
+                    msg.obj = backInfoObject.getStatus();
+                }
+                handler.sendMessage(msg);
+            }
+        });
+    }
+
+    /**
+     * 年检通知
+     *
+     * @param req
+     * @param handler
+     */
+    public static void noticeYearCheck(YearCheckNoticeReq req, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
+            Message msg = handler.obtainMessage();
+            msg.what = ERROR_CODE;
+            msg.obj = "设备无网络";
+            handler.sendMessage(msg);
+            return;
+        }
+        HashMap<String, String> paramsMap = new HashMap<String, String>();
+        paramsMap.put("termId", req.getTermId());
+        paramsMap.put("cardId", req.getCardId());
+        paramsMap.put("writecCardResult", req.getWritecCardResult());
+        UrlHttpUtil.post(Constants.URL_NOTICE_YEAR_CHECK, paramsMap, new CallBackUtil.CallBackString() {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+                Message msg = handler.obtainMessage();
+                msg.what = ERROR_CODE;
+                msg.obj = errorMessage;
+                handler.sendMessage(msg);
+            }
+
+            @Override
+            public void onResponse(String response) {
+                Log.i(TAG, "noticeYearCheck = " + response);
+                Message msg = handler.obtainMessage();
+                BackInfoObject backInfoObject = gson.fromJson(response, new TypeToken<BackInfoObject>() {
+                }.getType());
+                if (backInfoObject.getStatus() != null && backInfoObject.getStatus().equals("00000")) {
+                    msg.what = YEAR_CHECK_NOTICE_SUCCESS;
+                    msg.obj = backInfoObject.getObj();
+                } else {
+                    msg.what = YEAR_CHECK_NOTICE_FAILURE;
+                    msg.obj = backInfoObject.getStatus();
+                }
+                handler.sendMessage(msg);
+            }
+        });
+    }
+
+
+    public static void heartBeat(HeartBeatReq heartBeatReq, final Handler handler) {
+        if (!isNetworkAvailable(context)) {
+            Message msg = handler.obtainMessage();
+            msg.what = ERROR_CODE;
+            msg.obj = "设备无网络";
+            handler.sendMessage(msg);
+            return;
+        }
+        HashMap<String, String> paramsMap = new HashMap<String, String>();
+        paramsMap.put("deviceId", heartBeatReq.getDeviceId()); //L29 设备唯一编号（必须代表机具的唯一性） 前5位位设备类型 例如：P209A1D002D343647093338363435
+        paramsMap.put("supplierNo", heartBeatReq.getSupplierNo()); //L8 供应商编码
+        paramsMap.put("dateTime", heartBeatReq.getDateTime()); //L14 心跳时间
+        paramsMap.put("merchantNo", heartBeatReq.getMerchantNo()); //L8 公司编码
+        paramsMap.put("posId", heartBeatReq.getPosId()); //L12 现场环境中设备被分配的POS ID
+        paramsMap.put("termNo", heartBeatReq.getTermNo()); //L12 现场环境中设备被分配的终端编码
+        paramsMap.put("samId", heartBeatReq.getSamId()); //L16 现场环境中设备被分配的psamId
+        paramsMap.put("binVer", heartBeatReq.getBinVer()); //M32 嵌入式软件版本号
+        paramsMap.put("binDate", heartBeatReq.getBinDate()); //L14 编译时间
+        paramsMap.put("whiteVer", heartBeatReq.getWhiteVer()); //L20 本地白名单版本号
+        paramsMap.put("regionCode", heartBeatReq.getRegionCode()); //L4 设备所在城市编码
+        paramsMap.put("dataCounts", heartBeatReq.getDataCounts()); //M6 设备未上传交易记录数
+        paramsMap.put("latestTradeTime", heartBeatReq.getLatestTradeTime()); //L14 最近一次交易时间
+        paramsMap.put("latestBootTime", heartBeatReq.getLatestBootTime());
+        String dataSign = getDataSign(heartBeatReq.getDeviceId() + heartBeatReq.getSupplierNo() + heartBeatReq.getDateTime() +
+                heartBeatReq.getMerchantNo() + heartBeatReq.getTermNo());
+        paramsMap.put("dataSign", dataSign);
+        UrlHttpUtil.post(Constants.URL_HEART_BEAT, paramsMap, new CallBackUtil.CallBackString() {
+            @Override
+            public void onFailure(int code, String errorMessage) {
+                // TODO: 18-11-2 remeber to delete
+                Log.i(TAG, "heart beat failure = " + errorMessage);
+            }
+
+            @Override
+            public void onResponse(String response) {
+                Log.e("TAG", "heart beat success = " + response);
+                Message msg = handler.obtainMessage();
+                BaseObject<HeartBeatRsp> backInfoObject = gson.fromJson(response, new TypeToken<BaseObject<HeartBeatRsp>>() {
+                }.getType());
+                if (backInfoObject.getCode() != null && backInfoObject.getCode().equals("00000")) {
+                    msg.what = HEART_BEAT_SUCEESS_CODE;
+                    msg.obj = backInfoObject.getContent();
+                    handler.sendMessage(msg);
+                }
+            }
+        });
+    }
+
+    private static String getDataSign(String sourceData){
+        String macKay = "82040620FEFAC4511FC65000ADAB0F77";
+        String dataSign = EncryptUtils.calculateMac(sourceData, macKay);
+        return dataSign;
+    }
+
+    /**
      * 心跳请求
      *
      * @param equId
@@ -352,7 +496,7 @@ public class HttpBusiness {
         paramsMap.put("dateTime", df.format(new Date()));
         paramsMap.put("binVer", binVer);
         paramsMap.put("hardworkVer", hardWorkVer);
-        UrlHttpUtil.post(Constants.HEART_BEAT_URL, paramsMap, new CallBackUtil.CallBackString() {
+        UrlHttpUtil.post(Constants.URL_HEART_BEAT, paramsMap, new CallBackUtil.CallBackString() {
             @Override
             public void onFailure(int code, String errorMessage) {
             }
